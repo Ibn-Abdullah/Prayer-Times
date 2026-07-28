@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مواقيت الصلاة</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='78' font-size='82'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1B2D;
+    --surface:#17263C;
+    --surface-2:#1E3049;
+    --accent:#C6A15B;
+    --accent-soft:rgba(198,161,91,0.14);
+    --text:#E9E4D6;
+    --text-muted:#8FA0B8;
+    --border:rgba(233,228,214,0.08);
+    --shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  html[data-theme="day"]{
+    --bg:#EDEAE0;
+    --surface:#FBF9F3;
+    --surface-2:#F3EFE4;
+    --accent:#A8783E;
+    --accent-soft:rgba(168,120,62,0.12);
+    --text:#24303F;
+    --text-muted:#6B7280;
+    --border:rgba(36,48,63,0.08);
+    --shadow: 0 20px 50px rgba(36,48,63,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Tajawal', sans-serif;
+    min-height:100vh;
+    transition:background .5s ease, color .5s ease;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+  .wrap{ width:100%; max-width:620px; }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:22px;
+  }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand h1{
+    font-family:'Amiri', serif;
+    font-weight:700;
+    font-size:1.9rem;
+    letter-spacing:.5px;
+  }
+  .brand span{ color:var(--text-muted); font-size:.8rem; }
+
+  .header-actions{ display:flex; gap:10px; flex-shrink:0; }
+
+  .theme-toggle{
+    width:44px; height:44px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--accent);
+    font-size:1.15rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .3s ease, background .4s ease, opacity .3s ease;
+    flex-shrink:0;
+  }
+  .theme-toggle:hover{ transform:scale(1.06); }
+  .theme-toggle.muted{ opacity:.4; }
+  .theme-toggle:focus-visible, input:focus-visible, .card:focus-visible, .city-item:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  /* ---- Azan alert banner ---- */
+  .azan-banner{
+    position:fixed;
+    left:16px; right:16px; bottom:-120px;
+    max-width:588px;
+    margin:0 auto;
+    background:var(--surface);
+    border:1px solid var(--accent);
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
+    border-radius:16px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    z-index:50;
+    transition:bottom .4s ease;
+  }
+  .azan-banner.show{ bottom:16px; }
+  .azan-banner span{
+    font-family:'Amiri', serif;
+    font-size:1.05rem;
+    color:var(--accent);
+  }
+  .azan-banner button{
+    background:var(--accent);
+    color:var(--surface);
+    border:none;
+    border-radius:10px;
+    padding:8px 18px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:.85rem;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  /* ---- Searchable city box ---- */
+  .city-row{ margin-bottom:20px; position:relative; }
+  .search-box{ position:relative; }
+  .search-box svg{
+    position:absolute; top:50%; right:16px; transform:translateY(-50%);
+    width:16px; height:16px; opacity:.55; pointer-events:none;
+  }
+  #citySearch{
+    width:100%;
+    background:var(--surface);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:13px 44px 13px 16px;
+    font-family:'Tajawal', sans-serif;
+    font-size:.95rem;
+    box-shadow: var(--shadow);
+  }
+  #citySearch::placeholder{ color:var(--text-muted); }
+  .city-list{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0; left:0;
+    max-height:260px;
+    overflow-y:auto;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    z-index:20;
+    display:none;
+  }
+  .city-list.open{ display:block; }
+  .city-item{
+    padding:11px 16px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    font-size:.92rem;
+  }
+  .city-item:hover, .city-item.highlighted{ background:var(--accent-soft); }
+  .city-item b{ font-weight:500; }
+  .city-item span{ color:var(--text-muted); font-size:.78rem; }
+  .city-empty{ padding:14px 16px; color:var(--text-muted); font-size:.85rem; }
+
+  /* ---- Signature: horizon arc ---- */
+  .arc-panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:26px 20px 18px;
+    box-shadow:var(--shadow);
+    margin-bottom:22px;
+    text-align:center;
+  }
+  .arc-svg{ width:100%; max-width:460px; height:auto; }
+  .arc-track{ fill:none; stroke:var(--border); stroke-width:2; }
+  .arc-point circle{ fill:var(--surface-2); stroke:var(--border); stroke-width:1.5; }
+  .arc-point.next circle{ fill:var(--accent); stroke:none; }
+  .arc-point text{
+    fill:var(--text-muted);
+    font-family:'Tajawal', sans-serif;
+    font-size:11px;
+  }
+  .arc-point.next text{ fill:var(--accent); font-weight:700; }
+  .arc-glyph{
+    font-size:15px;
+    fill:var(--accent);
+  }
+
+  .next-prayer{ margin-top:4px; }
+  .next-prayer .label{ color:var(--text-muted); font-size:.85rem; }
+  .next-prayer .name{
+    font-family:'Amiri', serif;
+    font-size:1.7rem;
+    color:var(--accent);
+    margin:2px 0 6px;
+  }
+  .countdown{
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:2.1rem;
+    letter-spacing:1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .countdown-label{ color:var(--text-muted); font-size:.78rem; margin-top:2px; }
+  .retry-btn{
+    margin-top:14px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:12px;
+    padding:9px 20px;
+    font-family:'Tajawal', sans-serif;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .retry-btn:hover{ background:var(--accent); color:var(--surface); }
+
+  /* ---- Prayer grid ---- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 8px 16px;
+    text-align:center;
+    transition:border-color .3s ease, background .3s ease;
+    overflow:hidden;
+  }
+  .card.next{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .card.next::after{
+    content:"";
+    position:absolute;
+    left:22%; right:22%; bottom:0;
+    height:3px;
+    border-radius:3px 3px 0 0;
+    background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+  }
+  .card .p-name{
+    font-family:'Amiri', serif;
+    font-size:1.05rem;
+    margin-bottom:6px;
+  }
+  .card.next .p-name{ color:var(--accent); }
+  .card .p-time{
+    font-size:.95rem;
+    font-weight:500;
+    font-variant-numeric: tabular-nums;
+  }
+  .card.secondary .p-name{ opacity:.8; }
+
+  footer{
+    text-align:center;
+    color:var(--text-muted);
+    font-size:.78rem;
+    line-height:1.9;
+  }
+
+  @media (max-width:380px){
+    .brand h1{ font-size:1.6rem; }
+    .countdown{ font-size:1.7rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>مواقيت الصلاة</h1>
+      <span id="dateLine">—</span>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي والنهاري">☾</button>
+      <button class="theme-toggle" id="soundToggle" aria-label="تشغيل/إيقاف التنبيه الصوتي">🔔</button>
+    </div>
+  </header>
+
+  <div class="azan-banner" id="azanBanner">
+    <span id="azanBannerText">حان وقت الصلاة</span>
+    <button id="azanStopBtn">إيقاف</button>
+  </div>
+
+  <div class="city-row">
+    <div class="search-box">
+      <input type="text" id="citySearch" placeholder="ابحث عن مدينتك..." autocomplete="off" aria-label="ابحث عن مدينتك">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <div class="city-list" id="cityList" role="listbox"></div>
+    </div>
+  </div>
+
+  <div class="arc-panel">
+    <svg class="arc-svg" viewBox="0 0 460 240" id="arcSvg" aria-hidden="true">
+      <path class="arc-track" id="arcTrack"></path>
+      <g id="arcPoints"></g>
+      <text class="arc-glyph" id="arcGlyph" text-anchor="middle"></text>
+    </svg>
+    <div class="next-prayer">
+      <div class="label" id="statusLabel">جاري تحميل المواقيت…</div>
+      <div class="name" id="nextName">—</div>
+      <div class="countdown" id="countdown">--:--:--</div>
+      <div class="countdown-label" id="countdownLabel">متبقٍّ حتى الأذان</div>
+      <button id="retryBtn" class="retry-btn" style="display:none">إعادة المحاولة</button>
+    </div>
+  </div>
+
+  <div class="grid" id="prayerGrid"></div>
+
+  <footer id="footerNote"></footer>
+
+</div>
+
+<script>
+(function(){
+
+  const CITIES = [
+     // ===== مصر =====
+    { id:"cairo", name:"القاهرة", country:"مصر", lat:30.0444, lng:31.2357, method:5 },
+    { id:"alex", name:"الإسكندرية", country:"مصر", lat:31.2001, lng:29.9187, method:5 },
+    { id:"giza", name:"الجيزة", country:"مصر", lat:30.0131, lng:31.2089, method:5 },
+    { id:"mansoura", name:"المنصورة", country:"مصر", lat:31.0409, lng:31.3785, method:5 },
+    { id:"tanta", name:"طنطا", country:"مصر", lat:30.7865, lng:31.0004, method:5 },
+    { id:"asyut", name:"أسيوط", country:"مصر", lat:27.1809, lng:31.1837, method:5 },
+    { id:"luxor", name:"الأقصر", country:"مصر", lat:25.6872, lng:32.6396, method:5 },
+    { id:"aswan", name:"أسوان", country:"مصر", lat:24.0889, lng:32.8998, method:5 },
+    { id:"ismailia", name:"الإسماعيلية", country:"مصر", lat:30.5965, lng:32.2715, method:5 },
+    { id:"portsaid", name:"بورسعيد", country:"مصر", lat:31.2653, lng:32.3019, method:5 },
+       { id:"zagazig", name:"الزقازيق", country:"مصر", lat:30.5877, lng:31.5020, method:5 },
+	{ id:"damanhur", name:"دمنهور", country:"مصر", lat:31.0341, lng:30.4682, method:5 },
+{ id:"beni_suef", name:"بني سويف", country:"مصر", lat:29.0661, lng:31.0994, method:5 },
+{ id:"minya", name:"المنيا", country:"مصر", lat:28.1099, lng:30.7503, method:5 },
+{ id:"sohag", name:"سوهاج", country:"مصر", lat:26.5569, lng:31.6948, method:5 },
+{ id:"qena", name:"قنا", country:"مصر", lat:26.1551, lng:32.7160, method:5 },
+{ id:"damietta", name:"دمياط", country:"مصر", lat:31.4165, lng:31.8133, method:5 },
+{ id:"kafr_el_sheikh", name:"كفر الشيخ", country:"مصر", lat:31.1107, lng:30.9399, method:5 },
+{ id:"fayoum", name:"الفيوم", country:"مصر", lat:29.3084, lng:30.8428, method:5 },
+{ id:"arish", name:"العريش", country:"مصر", lat:31.1313, lng:33.7984, method:5 },
+    // ===== السعودية =====
+    { id:"riyadh", name:"الرياض", country:"السعودية", lat:24.7136, lng:46.6753, method:4 },
+    { id:"jeddah", name:"جدة", country:"السعودية", lat:21.4858, lng:39.1925, method:4 },
+    { id:"makkah", name:"مكة المكرمة", country:"السعودية", lat:21.3891, lng:39.8579, method:4 },
+    { id:"madinah", name:"المدينة المنورة", country:"السعودية", lat:24.5247, lng:39.5692, method:4 },
+    { id:"dammam", name:"الدمام", country:"السعودية", lat:26.4207, lng:50.0888, method:4 },
+    { id:"hail", name:"حائل", country:"السعودية", lat:27.5219, lng:41.6907, method:4 },
+    { id:"abha", name:"أبها", country:"السعودية", lat:18.2164, lng:42.5053, method:4 },
+    { id:"tabuk", name:"تبوك", country:"السعودية", lat:28.3998, lng:36.5715, method:4 },
+    { id:"taif", name:"الطائف", country:"السعودية", lat:21.2703, lng:40.4158, method:4 },
+    { id:"buraydah", name:"بريدة", country:"السعودية", lat:26.3592, lng:43.9818, method:4 },
+    { id:"najran", name:"نجران", country:"السعودية", lat:17.5650, lng:44.2289, method:4 },
+    { id:"jazan", name:"جازان", country:"السعودية", lat:16.8892, lng:42.5511, method:4 },
+       { id:"hofuf", name:"الهفوف", country:"السعودية", lat:25.3833, lng:49.5833, method:4 },
+{ id:"qatif", name:"القطيف", country:"السعودية", lat:26.5654, lng:50.0089, method:4 },
+{ id:"jubail", name:"الجبيل", country:"السعودية", lat:27.0174, lng:49.6583, method:4 },
+{ id:"yanbu", name:"ينبع", country:"السعودية", lat:24.0895, lng:38.0618, method:4 },
+{ id:"arar", name:"عرعر", country:"السعودية", lat:30.9753, lng:41.0381, method:4 },
+{ id:"sakaka", name:"سكاكا", country:"السعودية", lat:29.9697, lng:40.2064, method:4 },
+{ id:"qurayyat", name:"القريات", country:"السعودية", lat:31.3318, lng:37.3428, method:4 },
+{ id:"rafha", name:"رفحاء", country:"السعودية", lat:29.6202, lng:43.4946, method:4 },
+{ id:"hafr_al_batin", name:"حفر الباطن", country:"السعودية", lat:28.4328, lng:45.9708, method:4 },
+{ id:"al_bahah", name:"الباحة", country:"السعودية", lat:20.0129, lng:41.4677, method:4 },
+{ id:"alkharj", name:"الخرج", country:"السعودية", lat:24.1554, lng:47.3120, method:4 },
+{ id:"unaizah", name:"عنيزة", country:"السعودية", lat:26.0911, lng:43.9930, method:4 },
+{ id:"bisha", name:"بيشة", country:"السعودية", lat:19.9844, lng:42.6052, method:4 },
+{ id:"alkhafji", name:"الخفجي", country:"السعودية", lat:28.4251, lng:48.4913, method:4 },
+{ id:"ras_tanura", name:"رأس تنورة", country:"السعودية", lat:26.6467, lng:50.1597, method:4 },
+{ id:"shaqra", name:"شقراء", country:"السعودية", lat:25.2486, lng:45.2468, method:4 },
+{ id:"majmaah", name:"المجمعة", country:"السعودية", lat:25.9039, lng:45.3566, method:4 },
+
+    // ===== الإمارات =====
+    { id:"abudhabi", name:"أبوظبي", country:"الإمارات", lat:24.4539, lng:54.3773, method:8 },
+    { id:"dubai", name:"دبي", country:"الإمارات", lat:25.2048, lng:55.2708, method:8 },
+    { id:"sharjah", name:"الشارقة", country:"الإمارات", lat:25.3463, lng:55.4209, method:8 },
+    { id:"ajman", name:"عجمان", country:"الإمارات", lat:25.4052, lng:55.5136, method:8 },
+    { id:"rak", name:"رأس الخيمة", country:"الإمارات", lat:25.8007, lng:55.9762, method:8 },
+    { id:"fujairah", name:"الفجيرة", country:"الإمارات", lat:25.1288, lng:56.3265, method:8 },
+    { id:"alain", name:"العين", country:"الإمارات", lat:24.2075, lng:55.7447, method:8 },
+{ id:"khorfakkan", name:"خورفكان", country:"الإمارات", lat:25.3397, lng:56.3028, method:8 },
+{ id:"kalba", name:"كلباء", country:"الإمارات", lat:25.0742, lng:56.3569, method:8 },
+{ id:"dibba", name:"دبا الفجيرة", country:"الإمارات", lat:25.5925, lng:56.2618, method:8 },
+{ id:"ruwais", name:"الرويس", country:"الإمارات", lat:24.1103, lng:52.7306, method:8 },
+{ id:"madam", name:"المدام", country:"الإمارات", lat:24.9556, lng:55.7686, method:8 },
+
+
+    // ===== الكويت =====
+    { id:"kuwait", name:"مدينة الكويت", country:"الكويت", lat:29.3759, lng:47.9774, method:9 },
+    { id:"ahmadi", name:"الأحمدي", country:"الكويت", lat:29.0769, lng:48.0839, method:9 },
+    { id:"jahra", name:"الجهراء", country:"الكويت", lat:29.3375, lng:47.6581, method:9 },
+{ id:"farwaniya", name:"الفروانية", country:"الكويت", lat:29.2775, lng:47.9586, method:9 },
+{ id:"hawalli", name:"حولي", country:"الكويت", lat:29.3338, lng:48.0297, method:9 },
+{ id:"salmiya", name:"السالمية", country:"الكويت", lat:29.3360, lng:48.0717, method:9 },
+
+    // ===== قطر =====
+    { id:"doha", name:"الدوحة", country:"قطر", lat:25.2854, lng:51.5310, method:10 },
+    { id:"alkhor", name:"الخور", country:"قطر", lat:25.6839, lng:51.5058, method:10 },
+    { id:"wakrah", name:"الوكرة", country:"قطر", lat:25.1715, lng:51.6034, method:10 },
+{ id:"dukhan", name:"دخان", country:"قطر", lat:25.4249, lng:50.7823, method:10 },
+{ id:"alrayyan", name:"الريان", country:"قطر", lat:25.2919, lng:51.4244, method:10 },
+
+    // ===== البحرين =====
+    { id:"manama", name:"المنامة", country:"البحرين", lat:26.2285, lng:50.5860, method:8 },
+    { id:"muharraq", name:"المحرق", country:"البحرين", lat:26.2572, lng:50.6119, method:8 },
+{ id:"riffa", name:"الرفاع", country:"البحرين", lat:26.1300, lng:50.5550, method:8 },
+{ id:"isa_town", name:"مدينة عيسى", country:"البحرين", lat:26.1736, lng:50.5478, method:8 },
+
+
+    // ===== عمان =====
+    { id:"muscat", name:"مسقط", country:"عُمان", lat:23.5880, lng:58.3829, method:8 },
+    { id:"salalah", name:"صلالة", country:"عُمان", lat:17.0194, lng:54.0897, method:8 },
+    { id:"sohar", name:"صحار", country:"عُمان", lat:24.3475, lng:56.7097, method:8 },
+    { id:"nizwa", name:"نزوى", country:"عُمان", lat:22.9333, lng:57.5333, method:8 },
+{ id:"sur", name:"صور", country:"عُمان", lat:22.5667, lng:59.5289, method:8 },
+{ id:"ibri", name:"عبري", country:"عُمان", lat:23.2257, lng:56.5157, method:8 },
+{ id:"barka", name:"بركاء", country:"عُمان", lat:23.7070, lng:57.8898, method:8 },
+{ id:"rustaq", name:"الرستاق", country:"عُمان", lat:23.3908, lng:57.4244, method:8 },
+{ id:"bahla", name:"بهلاء", country:"عُمان", lat:22.9645, lng:57.3047, method:8 },
+{ id:"khasab", name:"خصب", country:"عُمان", lat:26.1799, lng:56.2477, method:8 },
+
+    // ===== الأردن =====
+    { id:"amman", name:"عمّان", country:"الأردن", lat:31.9454, lng:35.9284, method:23 },
+    { id:"zarqa", name:"الزرقاء", country:"الأردن", lat:32.0728, lng:36.0880, method:23 },
+    { id:"irbid", name:"إربد", country:"الأردن", lat:32.5556, lng:35.8500, method:23 },
+    { id:"aqaba", name:"العقبة", country:"الأردن", lat:29.5319, lng:35.0061, method:23 },
+
+    // ===== فلسطين =====
+    { id:"jerusalem", name:"القدس", country:"فلسطين", lat:31.7683, lng:35.2137, method:3 },
+    { id:"gaza", name:"غزة", country:"فلسطين", lat:31.5017, lng:34.4668, method:3 },
+    { id:"hebron", name:"الخليل", country:"فلسطين", lat:31.5326, lng:35.0998, method:3 },
+    { id:"nablus", name:"نابلس", country:"فلسطين", lat:32.2211, lng:35.2544, method:3 },
+    { id:"ramallah", name:"رام الله", country:"فلسطين", lat:31.9038, lng:35.2034, method:3 },
+
+    // ===== لبنان =====
+    { id:"beirut", name:"بيروت", country:"لبنان", lat:33.8938, lng:35.5018, method:3 },
+    { id:"tripolilb", name:"طرابلس", country:"لبنان", lat:34.4335, lng:35.8497, method:3 },
+    { id:"sidon", name:"صيدا", country:"لبنان", lat:33.5571, lng:35.3715, method:3 },
+
+    // ===== سوريا =====
+    { id:"damascus", name:"دمشق", country:"سوريا", lat:33.5138, lng:36.2765, method:3 },
+    { id:"aleppo", name:"حلب", country:"سوريا", lat:36.2021, lng:37.1343, method:3 },
+    { id:"homs", name:"حمص", country:"سوريا", lat:34.7308, lng:36.7090, method:3 },
+    { id:"latakia", name:"اللاذقية", country:"سوريا", lat:35.5317, lng:35.7900, method:3 },
+
+    // ===== العراق =====
+    { id:"baghdad", name:"بغداد", country:"العراق", lat:33.3152, lng:44.3661, method:3 },
+    { id:"basra", name:"البصرة", country:"العراق", lat:30.5085, lng:47.7835, method:3 },
+    { id:"mosul", name:"الموصل", country:"العراق", lat:36.3400, lng:43.1300, method:3 },
+    { id:"erbil", name:"أربيل", country:"العراق", lat:36.1911, lng:44.0092, method:3 },
+    { id:"najaf", name:"النجف", country:"العراق", lat:31.9985, lng:44.3398, method:3 },
+
+    // ===== اليمن =====
+    { id:"sanaa", name:"صنعاء", country:"اليمن", lat:15.3694, lng:44.1910, method:3 },
+    { id:"aden", name:"عدن", country:"اليمن", lat:12.7855, lng:45.0187, method:3 },
+    { id:"taiz", name:"تعز", country:"اليمن", lat:13.5795, lng:44.0209, method:3 },
+
+    // ===== السودان =====
+    { id:"khartoum", name:"الخرطوم", country:"السودان", lat:15.5007, lng:32.5599, method:3 },
+    { id:"omdurman", name:"أم درمان", country:"السودان", lat:15.6445, lng:32.4777, method:3 },
+    { id:"portsudan", name:"بورتسودان", country:"السودان", lat:19.6158, lng:37.2164, method:3 },
+
+    // ===== ليبيا =====
+    { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872, lng:13.1913, method:3 },
+    { id:"benghazi", name:"بنغازي", country:"ليبيا", lat:32.1167, lng:20.0667, method:3 },
+    { id:"misrata", name:"مصراتة", country:"ليبيا", lat:32.3754, lng:15.0925, method:3 },
+
+    // ===== تونس =====
+    { id:"tunis", name:"تونس", country:"تونس", lat:36.8065, lng:10.1815, method:18 },
+    { id:"sfax", name:"صفاقس", country:"تونس", lat:34.7406, lng:10.7603, method:18 },
+    { id:"sousse", name:"سوسة", country:"تونس", lat:35.8256, lng:10.6369, method:18 },
+
+    // ===== الجزائر =====
+    { id:"algiers", name:"الجزائر", country:"الجزائر", lat:36.7538, lng:3.0588, method:19 },
+    { id:"oran", name:"وهران", country:"الجزائر", lat:35.6971, lng:-0.6308, method:19 },
+    { id:"constantine", name:"قسنطينة", country:"الجزائر", lat:36.3650, lng:6.6147, method:19 },
+
+    // ===== المغرب =====
+    { id:"rabat", name:"الرباط", country:"المغرب", lat:34.0209, lng:-6.8416, method:21 },
+    { id:"casablanca", name:"الدار البيضاء", country:"المغرب", lat:33.5731, lng:-7.5898, method:21 },
+    { id:"marrakech", name:"مراكش", country:"المغرب", lat:31.6295, lng:-7.9811, method:21 },
+    { id:"fes", name:"فاس", country:"المغرب", lat:34.0331, lng:-5.0003, method:21 },
+    { id:"tangier", name:"طنجة", country:"المغرب", lat:35.7595, lng:-5.8340, method:21 },
+
+    // ===== موريتانيا =====
+    { id:"nouakchott", name:"نواكشوط", country:"موريتانيا", lat:18.0735, lng:-15.9582, method:3 },
+    { id:"nouadhibou", name:"نواذيبو", country:"موريتانيا", lat:20.9425, lng:-17.0362, method:3 },
+
+    // ===== الصومال =====
+    { id:"mogadishu", name:"مقديشو", country:"الصومال", lat:2.0469, lng:45.3182, method:3 },
+    { id:"hargeisa", name:"هرجيسا", country:"الصومال", lat:9.5624, lng:44.0770, method:3 },
+
+    // ===== جيبوتي =====
+    { id:"djibouti", name:"جيبوتي", country:"جيبوتي", lat:11.5721, lng:43.1456, method:3 },
+
+    // ===== جزر القمر =====
+    { id:"moroni", name:"موروني", country:"جزر القمر", lat:11.7172, lng:43.2473, method:3 }
+
+  ];
+
+  const METHOD_NAMES = {
+    3:"رابطة العالم الإسلامي", 4:"أم القرى", 5:"مصر", 8:"دول الخليج",
+    9:"الكويت", 10:"قطر", 18:"تونس", 19:"الجزائر", 21:"المغرب", 23:"الأردن"
+  };
+
+  // order matters: this is the display order in the grid (sunrise sits right after Fajr)
+  const PRAYERS = [
+    { key:"Fajr",    name:"الفجر" },
+    { key:"Sunrise", name:"الشروق", secondary:true },
+    { key:"Dhuhr",   name:"الظهر" },
+    { key:"Asr",     name:"العصر" },
+    { key:"Maghrib", name:"المغرب" },
+    { key:"Isha",    name:"العشاء" }
+  ];
+
+  // the five obligatory prayers, used for next-prayer / countdown / alert logic
+  const OBLIGATORY = ["Fajr","Dhuhr","Asr","Maghrib","Isha"];
+
+  const state = {
+    theme: "night",
+    cityId: "cairo",
+    timings: null,
+    hijri: null,
+    gregorian: null,
+    _interval: null,
+    soundOn: true,
+    lastActiveKey: null,
+    ringing: false,
+    ringTimeout: null,
+    activeAudioNodes: []
+  };
+
+  const el = {
+    themeToggle: document.getElementById("themeToggle"),
+    soundToggle: document.getElementById("soundToggle"),
+    azanBanner: document.getElementById("azanBanner"),
+    azanBannerText: document.getElementById("azanBannerText"),
+    azanStopBtn: document.getElementById("azanStopBtn"),
+    citySearch: document.getElementById("citySearch"),
+    cityList: document.getElementById("cityList"),
+    dateLine: document.getElementById("dateLine"),
+    nextName: document.getElementById("nextName"),
+    countdown: document.getElementById("countdown"),
+    grid: document.getElementById("prayerGrid"),
+    footerNote: document.getElementById("footerNote"),
+    statusLabel: document.getElementById("statusLabel"),
+    countdownLabel: document.getElementById("countdownLabel"),
+    retryBtn: document.getElementById("retryBtn"),
+    arcTrack: document.getElementById("arcTrack"),
+    arcPoints: document.getElementById("arcPoints"),
+    arcGlyph: document.getElementById("arcGlyph")
+  };
+
+  // ---------- theme (night by default) ----------
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", state.theme === "day" ? "day" : "night");
+    el.themeToggle.textContent = state.theme === "day" ? "☀" : "☾";
+  }
+  el.themeToggle.addEventListener("click", ()=>{
+    state.theme = state.theme === "day" ? "night" : "day";
+    applyTheme();
+  });
+  applyTheme();
+
+  // ---------- sound toggle ----------
+  function applySoundIcon(){
+    el.soundToggle.textContent = state.soundOn ? "🔔" : "🔕";
+    el.soundToggle.classList.toggle("muted", !state.soundOn);
+  }
+  el.soundToggle.addEventListener("click", ()=>{
+    state.soundOn = !state.soundOn;
+    applySoundIcon();
+    if(!state.soundOn) stopAdhanAlert();
+  });
+  applySoundIcon();
+
+  // ---------- audio (synthesized, no copyrighted recordings) ----------
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(Ctx) audioCtx = new Ctx();
+    }
+    if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  }
+  document.addEventListener("click", ensureAudio);
+  document.addEventListener("touchstart", ensureAudio, { once:true });
+
+  function playTone(freq, startTime, duration, gainPeak){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+    state.activeAudioNodes.push(osc);
+    osc.onended = ()=>{
+      const i = state.activeAudioNodes.indexOf(osc);
+      if(i > -1) state.activeAudioNodes.splice(i,1);
+    };
+  }
+
+  // a calm, gentle rising-and-falling phrase (original melody, not a recitation)
+  function playPhrase(){
+    if(!audioCtx) return 0;
+    const t0 = audioCtx.currentTime + 0.05;
+    const notes = [392.00, 440.00, 523.25, 440.00, 392.00, 329.63];
+    let t = t0;
+    notes.forEach(f=>{
+      playTone(f, t, 1.1, 0.16);
+      t += 0.8;
+    });
+    return t - t0;
+  }
+
+  function showBanner(name){
+    el.azanBannerText.textContent = `حان وقت صلاة ${name}`;
+    el.azanBanner.classList.add("show");
+  }
+  function hideBanner(){
+    el.azanBanner.classList.remove("show");
+  }
+
+  function startAdhanAlert(prayerName){
+    if(!state.soundOn) return;
+    ensureAudio();
+    if(!audioCtx) return;
+    stopAdhanAlert();
+    state.ringing = true;
+    showBanner(prayerName);
+
+    let repeats = 0;
+    const maxRepeats = 4;
+    function loop(){
+      if(!state.ringing) return;
+      const dur = playPhrase();
+      repeats++;
+      if(repeats < maxRepeats){
+        state.ringTimeout = setTimeout(loop, (dur + 1) * 1000);
+      } else {
+        state.ringTimeout = setTimeout(stopAdhanAlert, (dur + 0.3) * 1000);
+      }
+    }
+    loop();
+  }
+
+  function stopAdhanAlert(){
+    state.ringing = false;
+    if(state.ringTimeout){ clearTimeout(state.ringTimeout); state.ringTimeout = null; }
+    state.activeAudioNodes.forEach(osc=>{ try{ osc.stop(); }catch(e){} });
+    state.activeAudioNodes = [];
+    hideBanner();
+  }
+
+  el.azanStopBtn.addEventListener("click", stopAdhanAlert);
+
+  // ---------- searchable city list ----------
+  function renderCityList(filterText){
+    const q = (filterText || "").trim();
+    const matches = q
+      ? CITIES.filter(c => c.name.includes(q) || c.country.includes(q))
+      : CITIES;
+
+    el.cityList.innerHTML = "";
+    if(matches.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "city-empty";
+      empty.textContent = "لا توجد نتائج";
+      el.cityList.appendChild(empty);
+      return;
+    }
+    matches.forEach(c=>{
+      const item = document.createElement("div");
+      item.className = "city-item";
+      item.setAttribute("role","option");
+      item.tabIndex = 0;
+      item.innerHTML = `<b>${c.name}</b><span>${c.country}</span>`;
+      item.addEventListener("click", ()=> selectCity(c.id));
+      item.addEventListener("keydown", e=>{ if(e.key==="Enter") selectCity(c.id); });
+      el.cityList.appendChild(item);
+    });
+  }
+
+  function selectCity(id){
+    const city = CITIES.find(c=>c.id === id);
+    state.cityId = id;
+    el.citySearch.value = `${city.name}، ${city.country}`;
+    el.cityList.classList.remove("open");
+    loadTimings();
+  }
+
+  el.citySearch.addEventListener("focus", ()=>{
+    el.citySearch.select();
+    renderCityList("");
+    el.cityList.classList.add("open");
+  });
+  el.citySearch.addEventListener("input", ()=>{
+    renderCityList(el.citySearch.value);
+    el.cityList.classList.add("open");
+  });
+  document.addEventListener("click", e=>{
+    if(!e.target.closest(".city-row")){
+      el.cityList.classList.remove("open");
+    }
+  });
+
+  // set initial search box text to default city
+  (function initCityBox(){
+    const c = CITIES.find(x=>x.id === state.cityId);
+    el.citySearch.value = `${c.name}، ${c.country}`;
+  })();
+
+  // ---------- fetch ----------
+  function setLoading(){
+    el.statusLabel.textContent = "جاري تحميل المواقيت…";
+    el.nextName.textContent = "—";
+    el.countdown.textContent = "--:--:--";
+    el.countdownLabel.textContent = "";
+    el.retryBtn.style.display = "none";
+  }
+
+  function setError(message){
+    el.statusLabel.textContent = "تعذّر تحميل المواقيت";
+    el.nextName.textContent = "";
+    el.countdown.textContent = "";
+    el.countdownLabel.textContent = message;
+    el.retryBtn.style.display = "inline-block";
+  }
+
+  function fetchJson(url){
+    return fetch(url).then(r=>{
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    });
+  }
+
+  function loadTimings(){
+    const city = CITIES.find(c=>c.id === state.cityId);
+    if(state._interval) clearInterval(state._interval);
+    stopAdhanAlert();
+    state.lastActiveKey = null;
+    setLoading();
+
+    const directUrl = `https://api.aladhan.com/v1/timings?latitude=${city.lat}&longitude=${city.lng}&method=${city.method}`;
+    // Aladhan's API sometimes omits CORS headers for direct browser requests,
+    // so if the direct call fails we retry through a CORS-friendly relay.
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
+
+    fetchJson(directUrl)
+      .catch(()=> fetchJson(proxyUrl))
+      .then(json=>{
+        if(json.code !== 200) throw new Error("استجابة غير متوقعة من الخادم");
+        state.timings = json.data.timings;
+        state.hijri = json.data.date.hijri;
+        state.gregorian = json.data.date.gregorian;
+        render(city);
+      })
+      .catch(err=>{
+        console.error("Prayer times fetch failed:", err);
+        setError("تأكد من اتصال الإنترنت ثم اضغط إعادة المحاولة. (" + err.message + ")");
+      });
+  }
+
+  el.retryBtn.addEventListener("click", loadTimings);
+
+  // ---------- helpers ----------
+  function toMinutes(hhmm){
+    const [h,m] = hhmm.split(":").map(Number);
+    return h*60 + m;
+  }
+
+  function to12Hour(hhmm){
+    const [h,m] = hhmm.split(":").map(Number);
+    const period = h < 12 ? "ص" : "م";
+    let h12 = h % 12;
+    if(h12 === 0) h12 = 12;
+    return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+  }
+
+  function nowMinutes(){
+    const d = new Date();
+    return d.getHours()*60 + d.getMinutes() + d.getSeconds()/60;
+  }
+
+  function fmtCountdown(totalSeconds){
+    const h = Math.floor(totalSeconds/3600);
+    const m = Math.floor((totalSeconds%3600)/60);
+    const s = Math.floor(totalSeconds%60);
+    const pad = n => String(n).padStart(2,"0");
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+
+  // ---------- render ----------
+  function render(city){
+    const t = state.timings;
+
+    const gDate = `${state.gregorian.day} ${state.gregorian.month.en} ${state.gregorian.year}`;
+    const hDate = `${state.hijri.day} ${state.hijri.month.ar} ${state.hijri.year}هـ`;
+    el.dateLine.textContent = `${gDate} — ${hDate}`;
+
+    el.statusLabel.textContent = "الصلاة القادمة";
+    el.countdownLabel.textContent = "متبقٍّ حتى الأذان";
+    el.retryBtn.style.display = "none";
+
+    // prayer cards (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha)
+    el.grid.innerHTML = "";
+    PRAYERS.forEach(p=>{
+      const card = document.createElement("div");
+      card.className = "card" + (p.secondary ? " secondary" : "");
+      card.dataset.key = p.key;
+      card.innerHTML = `<div class="p-name">${p.name}</div><div class="p-time">${to12Hour(t[p.key])}</div>`;
+      el.grid.appendChild(card);
+    });
+
+    const methodName = METHOD_NAMES[city.method] || "طريقة قياسية";
+    el.footerNote.innerHTML = `${city.name}، ${city.country} · طريقة الحساب: ${methodName}`;
+
+    buildArc();
+    tick();
+    if(state._interval) clearInterval(state._interval);
+    state._interval = setInterval(tick, 1000);
+  }
+
+  // ---------- arc geometry ----------
+  const ARC = { cx:230, cy:210, r:190, startDeg:200, endDeg:-20 };
+
+  function angleForMinute(min, fajrMin, ishaMin){
+    const clamped = Math.min(Math.max(min, fajrMin), ishaMin);
+    const ratio = (clamped - fajrMin) / (ishaMin - fajrMin);
+    return ARC.startDeg + ratio * (ARC.endDeg - ARC.startDeg);
+  }
+
+  function pointOnArc(deg){
+    const rad = deg * Math.PI / 180;
+    return {
+      x: ARC.cx + ARC.r * Math.cos(rad),
+      y: ARC.cy - ARC.r * Math.sin(rad) * 0.62
+    };
+  }
+
+  function buildArc(){
+    const t = state.timings;
+    const fajrMin = toMinutes(t.Fajr);
+    const ishaMin = toMinutes(t.Isha);
+
+    const startP = pointOnArc(ARC.startDeg);
+    const endP = pointOnArc(ARC.endDeg);
+
+    el.arcTrack.setAttribute("d",
+      `M ${startP.x} ${startP.y} Q ${ARC.cx} ${ARC.cy - ARC.r*0.9} ${endP.x} ${endP.y}`);
+
+    el.arcPoints.innerHTML = "";
+    PRAYERS.forEach(p=>{
+      const min = toMinutes(t[p.key]);
+      const deg = angleForMinute(min, fajrMin, ishaMin);
+      const pos = pointOnArc(deg);
+
+      const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+      g.setAttribute("class","arc-point");
+      g.dataset.key = p.key;
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      circle.setAttribute("cx", pos.x);
+      circle.setAttribute("cy", pos.y);
+      circle.setAttribute("r", p.secondary ? 5 : 7);
+      g.appendChild(circle);
+
+      const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+      label.setAttribute("x", pos.x);
+      label.setAttribute("y", pos.y - 14);
+      label.setAttribute("text-anchor","middle");
+      label.textContent = p.name;
+      g.appendChild(label);
+
+      el.arcPoints.appendChild(g);
+    });
+  }
+
+  function updateGlyphPosition(){
+    const t = state.timings;
+    const fajrMin = toMinutes(t.Fajr);
+    const ishaMin = toMinutes(t.Isha);
+    const now = nowMinutes();
+    const deg = angleForMinute(now, fajrMin, ishaMin);
+    const pos = pointOnArc(deg);
+    el.arcGlyph.setAttribute("x", pos.x);
+    el.arcGlyph.setAttribute("y", pos.y - 22);
+    const isDaytime = now >= fajrMin && now <= ishaMin;
+    el.arcGlyph.textContent = isDaytime ? "☀" : "☾";
+  }
+
+  // ---------- ticking ----------
+  function tick(){
+    const t = state.timings;
+    if(!t) return;
+
+    const now = nowMinutes();
+    const order = OBLIGATORY.map(key => ({ key, min: toMinutes(t[key]) }));
+
+    let next = order.find(p => p.min > now);
+    if(!next){
+      next = { key:"Fajr", min: toMinutes(t.Fajr) + 24*60 };
+    }
+
+    const diffSeconds = Math.round((next.min - now) * 60);
+
+    const nextObj = PRAYERS.find(p=>p.key === next.key);
+    el.nextName.textContent = nextObj ? nextObj.name : "الفجر";
+    el.countdown.textContent = fmtCountdown(Math.max(diffSeconds,0));
+
+    document.querySelectorAll(".card").forEach(c=>{
+      c.classList.toggle("next", c.dataset.key === next.key);
+    });
+    document.querySelectorAll(".arc-point").forEach(g=>{
+      g.classList.toggle("next", g.dataset.key === next.key);
+    });
+
+    updateGlyphPosition();
+
+    // detect a prayer time that has just started, and ring the alert
+    let activeKey = null;
+    for(let i=order.length-1;i>=0;i--){
+      if(now >= order[i].min){ activeKey = order[i].key; break; }
+    }
+    if(!activeKey) activeKey = "Isha";
+
+    if(state.lastActiveKey !== null && state.lastActiveKey !== activeKey){
+      const startedPrayer = PRAYERS.find(p=>p.key === activeKey);
+      startAdhanAlert(startedPrayer ? startedPrayer.name : activeKey);
+    }
+    state.lastActiveKey = activeKey;
+  }
+
+  loadTimings();
+})();
+</script>
+</body>
+</html>
