@@ -737,6 +737,7 @@
     state.ringing = false;
     state.muted = false;
     el.azanAudio.pause();
+    el.azanAudio.muted = false;
     el.azanAudio.currentTime = 0;
     el.azanStopBtn.textContent = "كتم";
     hideBanner();
@@ -752,17 +753,13 @@
     });
   }
 
-  // mute pauses in place; unmute resumes from the exact same spot
+  // mute only silences the output; playback keeps advancing underneath,
+  // so unmuting lands wherever the azan actually is "now" in real time
   function toggleMute(){
     if(!state.ringing) return;
     state.muted = !state.muted;
-    if(state.muted){
-      el.azanAudio.pause();
-      el.azanStopBtn.textContent = "إلغاء الكتم";
-    } else {
-      el.azanAudio.play().catch(()=>{});
-      el.azanStopBtn.textContent = "كتم";
-    }
+    el.azanAudio.muted = state.muted;
+    el.azanStopBtn.textContent = state.muted ? "إلغاء الكتم" : "كتم";
   }
   el.azanStopBtn.addEventListener("click", toggleMute);
 
