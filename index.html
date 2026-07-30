@@ -323,9 +323,6 @@
 
   <div class="grid" id="prayerGrid"></div>
 
-  <div style="text-align:center; margin-bottom:6px;">
-  </div>
-
   <footer id="footerNote"></footer>
 
 </div>
@@ -679,7 +676,6 @@
     azanBannerText: document.getElementById("azanBannerText"),
     azanStopBtn: document.getElementById("azanStopBtn"),
     azanAudio: document.getElementById("azanAudio"),
-    testAlertBtn: document.getElementById("testAlertBtn"),
     citySearch: document.getElementById("citySearch"),
     cityList: document.getElementById("cityList"),
     dateLine: document.getElementById("dateLine"),
@@ -761,13 +757,6 @@
     el.azanStopBtn.textContent = state.muted ? "إلغاء الكتم" : "كتم";
   }
   el.azanStopBtn.addEventListener("click", toggleMute);
-
-  el.testAlertBtn.addEventListener("click", ()=>{
-    const name = el.nextName.textContent && el.nextName.textContent !== "—"
-      ? el.nextName.textContent
-      : "الاختبار";
-    startAdhanAlert(name);
-  });
 
   // ---------- searchable city list ----------
   function renderCityList(filterText){
