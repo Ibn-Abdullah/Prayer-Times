@@ -288,14 +288,15 @@
     </div>
     <div class="header-actions">
       <button class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي والنهاري">☾</button>
-      <button class="theme-toggle" id="soundToggle" aria-label="تشغيل/إيقاف التنبيه الصوتي">🔔</button>
     </div>
   </header>
 
   <div class="azan-banner" id="azanBanner">
     <span id="azanBannerText">حان وقت الصلاة</span>
-    <button id="azanStopBtn">إيقاف</button>
+    <button id="azanStopBtn">كتم</button>
   </div>
+
+  <audio id="azanAudio" src="adhan.mp3" preload="none"></audio>
 
   <div class="city-row">
     <div class="search-box">
@@ -322,6 +323,10 @@
 
   <div class="grid" id="prayerGrid"></div>
 
+  <div style="text-align:center; margin-bottom:6px;">
+    <button id="testAlertBtn" class="retry-btn" style="display:inline-block;">تجربة التنبيه الآن 🔊</button>
+  </div>
+
   <footer id="footerNote"></footer>
 
 </div>
@@ -341,16 +346,23 @@
     { id:"aswan", name:"أسوان", country:"مصر", lat:24.0889, lng:32.8998, method:5 },
     { id:"ismailia", name:"الإسماعيلية", country:"مصر", lat:30.5965, lng:32.2715, method:5 },
     { id:"portsaid", name:"بورسعيد", country:"مصر", lat:31.2653, lng:32.3019, method:5 },
-       { id:"zagazig", name:"الزقازيق", country:"مصر", lat:30.5877, lng:31.5020, method:5 },
-	{ id:"damanhur", name:"دمنهور", country:"مصر", lat:31.0341, lng:30.4682, method:5 },
-{ id:"beni_suef", name:"بني سويف", country:"مصر", lat:29.0661, lng:31.0994, method:5 },
-{ id:"minya", name:"المنيا", country:"مصر", lat:28.1099, lng:30.7503, method:5 },
-{ id:"sohag", name:"سوهاج", country:"مصر", lat:26.5569, lng:31.6948, method:5 },
-{ id:"qena", name:"قنا", country:"مصر", lat:26.1551, lng:32.7160, method:5 },
-{ id:"damietta", name:"دمياط", country:"مصر", lat:31.4165, lng:31.8133, method:5 },
-{ id:"kafr_el_sheikh", name:"كفر الشيخ", country:"مصر", lat:31.1107, lng:30.9399, method:5 },
-{ id:"fayoum", name:"الفيوم", country:"مصر", lat:29.3084, lng:30.8428, method:5 },
-{ id:"arish", name:"العريش", country:"مصر", lat:31.1313, lng:33.7984, method:5 },
+    { id:"zagazig", name:"الزقازيق", country:"مصر", lat:30.5877, lng:31.5020, method:5 },
+    { id:"damanhur", name:"دمنهور", country:"مصر", lat:31.0341, lng:30.4682, method:5 },
+    { id:"beni_suef", name:"بني سويف", country:"مصر", lat:29.0661, lng:31.0994, method:5 },
+    { id:"minya", name:"المنيا", country:"مصر", lat:28.1099, lng:30.7503, method:5 },
+    { id:"sohag", name:"سوهاج", country:"مصر", lat:26.5569, lng:31.6948, method:5 },
+    { id:"qena", name:"قنا", country:"مصر", lat:26.1551, lng:32.7160, method:5 },
+    { id:"damietta", name:"دمياط", country:"مصر", lat:31.4165, lng:31.8133, method:5 },
+    { id:"kafr_el_sheikh", name:"كفر الشيخ", country:"مصر", lat:31.1107, lng:30.9399, method:5 },
+    { id:"fayoum", name:"الفيوم", country:"مصر", lat:29.3084, lng:30.8428, method:5 },
+    { id:"arish", name:"العريش", country:"مصر", lat:31.1313, lng:33.7984, method:5 },
+    { id:"marsa_matruh", name:"مرسى مطروح", country:"مصر", lat:31.3543, lng:27.2373, method:5 },
+    { id:"hurghada", name:"الغردقة", country:"مصر", lat:27.2579, lng:33.8116, method:5 },
+    { id:"sharm", name:"شرم الشيخ", country:"مصر", lat:27.9158, lng:34.3300, method:5 },
+    { id:"suez", name:"السويس", country:"مصر", lat:29.9668, lng:32.5498, method:5 },
+    { id:"beni_mazar", name:"بني مزار", country:"مصر", lat:28.4989, lng:30.8014, method:5 },
+    { id:"edfu", name:"إدفو", country:"مصر", lat:24.9781, lng:32.8730, method:5 },
+
     // ===== السعودية =====
     { id:"riyadh", name:"الرياض", country:"السعودية", lat:24.7136, lng:46.6753, method:4 },
     { id:"jeddah", name:"جدة", country:"السعودية", lat:21.4858, lng:39.1925, method:4 },
@@ -364,23 +376,27 @@
     { id:"buraydah", name:"بريدة", country:"السعودية", lat:26.3592, lng:43.9818, method:4 },
     { id:"najran", name:"نجران", country:"السعودية", lat:17.5650, lng:44.2289, method:4 },
     { id:"jazan", name:"جازان", country:"السعودية", lat:16.8892, lng:42.5511, method:4 },
-       { id:"hofuf", name:"الهفوف", country:"السعودية", lat:25.3833, lng:49.5833, method:4 },
-{ id:"qatif", name:"القطيف", country:"السعودية", lat:26.5654, lng:50.0089, method:4 },
-{ id:"jubail", name:"الجبيل", country:"السعودية", lat:27.0174, lng:49.6583, method:4 },
-{ id:"yanbu", name:"ينبع", country:"السعودية", lat:24.0895, lng:38.0618, method:4 },
-{ id:"arar", name:"عرعر", country:"السعودية", lat:30.9753, lng:41.0381, method:4 },
-{ id:"sakaka", name:"سكاكا", country:"السعودية", lat:29.9697, lng:40.2064, method:4 },
-{ id:"qurayyat", name:"القريات", country:"السعودية", lat:31.3318, lng:37.3428, method:4 },
-{ id:"rafha", name:"رفحاء", country:"السعودية", lat:29.6202, lng:43.4946, method:4 },
-{ id:"hafr_al_batin", name:"حفر الباطن", country:"السعودية", lat:28.4328, lng:45.9708, method:4 },
-{ id:"al_bahah", name:"الباحة", country:"السعودية", lat:20.0129, lng:41.4677, method:4 },
-{ id:"alkharj", name:"الخرج", country:"السعودية", lat:24.1554, lng:47.3120, method:4 },
-{ id:"unaizah", name:"عنيزة", country:"السعودية", lat:26.0911, lng:43.9930, method:4 },
-{ id:"bisha", name:"بيشة", country:"السعودية", lat:19.9844, lng:42.6052, method:4 },
-{ id:"alkhafji", name:"الخفجي", country:"السعودية", lat:28.4251, lng:48.4913, method:4 },
-{ id:"ras_tanura", name:"رأس تنورة", country:"السعودية", lat:26.6467, lng:50.1597, method:4 },
-{ id:"shaqra", name:"شقراء", country:"السعودية", lat:25.2486, lng:45.2468, method:4 },
-{ id:"majmaah", name:"المجمعة", country:"السعودية", lat:25.9039, lng:45.3566, method:4 },
+    { id:"hofuf", name:"الهفوف", country:"السعودية", lat:25.3833, lng:49.5833, method:4 },
+    { id:"qatif", name:"القطيف", country:"السعودية", lat:26.5654, lng:50.0089, method:4 },
+    { id:"jubail", name:"الجبيل", country:"السعودية", lat:27.0174, lng:49.6583, method:4 },
+    { id:"yanbu", name:"ينبع", country:"السعودية", lat:24.0895, lng:38.0618, method:4 },
+    { id:"arar", name:"عرعر", country:"السعودية", lat:30.9753, lng:41.0381, method:4 },
+    { id:"sakaka", name:"سكاكا", country:"السعودية", lat:29.9697, lng:40.2064, method:4 },
+    { id:"qurayyat", name:"القريات", country:"السعودية", lat:31.3318, lng:37.3428, method:4 },
+    { id:"rafha", name:"رفحاء", country:"السعودية", lat:29.6202, lng:43.4946, method:4 },
+    { id:"hafr_al_batin", name:"حفر الباطن", country:"السعودية", lat:28.4328, lng:45.9708, method:4 },
+    { id:"al_bahah", name:"الباحة", country:"السعودية", lat:20.0129, lng:41.4677, method:4 },
+    { id:"alkharj", name:"الخرج", country:"السعودية", lat:24.1554, lng:47.3120, method:4 },
+    { id:"unaizah", name:"عنيزة", country:"السعودية", lat:26.0911, lng:43.9930, method:4 },
+    { id:"bisha", name:"بيشة", country:"السعودية", lat:19.9844, lng:42.6052, method:4 },
+    { id:"alkhafji", name:"الخفجي", country:"السعودية", lat:28.4251, lng:48.4913, method:4 },
+    { id:"ras_tanura", name:"رأس تنورة", country:"السعودية", lat:26.6467, lng:50.1597, method:4 },
+    { id:"shaqra", name:"شقراء", country:"السعودية", lat:25.2486, lng:45.2468, method:4 },
+    { id:"majmaah", name:"المجمعة", country:"السعودية", lat:25.9039, lng:45.3566, method:4 },
+    { id:"khamis_mushait", name:"خميس مشيط", country:"السعودية", lat:18.3060, lng:42.7290, method:4 },
+    { id:"dawadmi", name:"الدوادمي", country:"السعودية", lat:24.5078, lng:44.3931, method:4 },
+    { id:"wadi_dawasir", name:"وادي الدواسر", country:"السعودية", lat:20.4972, lng:44.8000, method:4 },
+    { id:"turaif", name:"طريف", country:"السعودية", lat:31.6764, lng:38.6631, method:4 },
 
     // ===== الإمارات =====
     { id:"abudhabi", name:"أبوظبي", country:"الإمارات", lat:24.4539, lng:54.3773, method:8 },
@@ -390,52 +406,60 @@
     { id:"rak", name:"رأس الخيمة", country:"الإمارات", lat:25.8007, lng:55.9762, method:8 },
     { id:"fujairah", name:"الفجيرة", country:"الإمارات", lat:25.1288, lng:56.3265, method:8 },
     { id:"alain", name:"العين", country:"الإمارات", lat:24.2075, lng:55.7447, method:8 },
-{ id:"khorfakkan", name:"خورفكان", country:"الإمارات", lat:25.3397, lng:56.3028, method:8 },
-{ id:"kalba", name:"كلباء", country:"الإمارات", lat:25.0742, lng:56.3569, method:8 },
-{ id:"dibba", name:"دبا الفجيرة", country:"الإمارات", lat:25.5925, lng:56.2618, method:8 },
-{ id:"ruwais", name:"الرويس", country:"الإمارات", lat:24.1103, lng:52.7306, method:8 },
-{ id:"madam", name:"المدام", country:"الإمارات", lat:24.9556, lng:55.7686, method:8 },
-
+    { id:"khorfakkan", name:"خورفكان", country:"الإمارات", lat:25.3397, lng:56.3028, method:8 },
+    { id:"kalba", name:"كلباء", country:"الإمارات", lat:25.0742, lng:56.3569, method:8 },
+    { id:"dibba", name:"دبا الفجيرة", country:"الإمارات", lat:25.5925, lng:56.2618, method:8 },
+    { id:"ruwais", name:"الرويس", country:"الإمارات", lat:24.1103, lng:52.7306, method:8 },
+    { id:"madam", name:"المدام", country:"الإمارات", lat:24.9556, lng:55.7686, method:8 },
 
     // ===== الكويت =====
     { id:"kuwait", name:"مدينة الكويت", country:"الكويت", lat:29.3759, lng:47.9774, method:9 },
     { id:"ahmadi", name:"الأحمدي", country:"الكويت", lat:29.0769, lng:48.0839, method:9 },
     { id:"jahra", name:"الجهراء", country:"الكويت", lat:29.3375, lng:47.6581, method:9 },
-{ id:"farwaniya", name:"الفروانية", country:"الكويت", lat:29.2775, lng:47.9586, method:9 },
-{ id:"hawalli", name:"حولي", country:"الكويت", lat:29.3338, lng:48.0297, method:9 },
-{ id:"salmiya", name:"السالمية", country:"الكويت", lat:29.3360, lng:48.0717, method:9 },
+    { id:"farwaniya", name:"الفروانية", country:"الكويت", lat:29.2775, lng:47.9586, method:9 },
+    { id:"hawalli", name:"حولي", country:"الكويت", lat:29.3338, lng:48.0297, method:9 },
+    { id:"salmiya", name:"السالمية", country:"الكويت", lat:29.3360, lng:48.0717, method:9 },
 
     // ===== قطر =====
     { id:"doha", name:"الدوحة", country:"قطر", lat:25.2854, lng:51.5310, method:10 },
     { id:"alkhor", name:"الخور", country:"قطر", lat:25.6839, lng:51.5058, method:10 },
     { id:"wakrah", name:"الوكرة", country:"قطر", lat:25.1715, lng:51.6034, method:10 },
-{ id:"dukhan", name:"دخان", country:"قطر", lat:25.4249, lng:50.7823, method:10 },
-{ id:"alrayyan", name:"الريان", country:"قطر", lat:25.2919, lng:51.4244, method:10 },
+    { id:"dukhan", name:"دخان", country:"قطر", lat:25.4249, lng:50.7823, method:10 },
+    { id:"alrayyan", name:"الريان", country:"قطر", lat:25.2919, lng:51.4244, method:10 },
 
     // ===== البحرين =====
     { id:"manama", name:"المنامة", country:"البحرين", lat:26.2285, lng:50.5860, method:8 },
     { id:"muharraq", name:"المحرق", country:"البحرين", lat:26.2572, lng:50.6119, method:8 },
-{ id:"riffa", name:"الرفاع", country:"البحرين", lat:26.1300, lng:50.5550, method:8 },
-{ id:"isa_town", name:"مدينة عيسى", country:"البحرين", lat:26.1736, lng:50.5478, method:8 },
-
+    { id:"riffa", name:"الرفاع", country:"البحرين", lat:26.1300, lng:50.5550, method:8 },
+    { id:"isa_town", name:"مدينة عيسى", country:"البحرين", lat:26.1736, lng:50.5478, method:8 },
 
     // ===== عمان =====
     { id:"muscat", name:"مسقط", country:"عُمان", lat:23.5880, lng:58.3829, method:8 },
     { id:"salalah", name:"صلالة", country:"عُمان", lat:17.0194, lng:54.0897, method:8 },
     { id:"sohar", name:"صحار", country:"عُمان", lat:24.3475, lng:56.7097, method:8 },
     { id:"nizwa", name:"نزوى", country:"عُمان", lat:22.9333, lng:57.5333, method:8 },
-{ id:"sur", name:"صور", country:"عُمان", lat:22.5667, lng:59.5289, method:8 },
-{ id:"ibri", name:"عبري", country:"عُمان", lat:23.2257, lng:56.5157, method:8 },
-{ id:"barka", name:"بركاء", country:"عُمان", lat:23.7070, lng:57.8898, method:8 },
-{ id:"rustaq", name:"الرستاق", country:"عُمان", lat:23.3908, lng:57.4244, method:8 },
-{ id:"bahla", name:"بهلاء", country:"عُمان", lat:22.9645, lng:57.3047, method:8 },
-{ id:"khasab", name:"خصب", country:"عُمان", lat:26.1799, lng:56.2477, method:8 },
+    { id:"sur", name:"صور", country:"عُمان", lat:22.5667, lng:59.5289, method:8 },
+    { id:"ibri", name:"عبري", country:"عُمان", lat:23.2257, lng:56.5157, method:8 },
+    { id:"barka", name:"بركاء", country:"عُمان", lat:23.7070, lng:57.8898, method:8 },
+    { id:"rustaq", name:"الرستاق", country:"عُمان", lat:23.3908, lng:57.4244, method:8 },
+    { id:"bahla", name:"بهلاء", country:"عُمان", lat:22.9645, lng:57.3047, method:8 },
+    { id:"khasab", name:"خصب", country:"عُمان", lat:26.1799, lng:56.2477, method:8 },
 
     // ===== الأردن =====
     { id:"amman", name:"عمّان", country:"الأردن", lat:31.9454, lng:35.9284, method:23 },
     { id:"zarqa", name:"الزرقاء", country:"الأردن", lat:32.0728, lng:36.0880, method:23 },
     { id:"irbid", name:"إربد", country:"الأردن", lat:32.5556, lng:35.8500, method:23 },
     { id:"aqaba", name:"العقبة", country:"الأردن", lat:29.5319, lng:35.0061, method:23 },
+    { id:"salt", name:"السلط", country:"الأردن", lat:32.0392, lng:35.7272, method:23 },
+    { id:"madaba", name:"مادبا", country:"الأردن", lat:31.7197, lng:35.7942, method:23 },
+    { id:"karak", name:"الكرك", country:"الأردن", lat:31.1854, lng:35.7047, method:23 },
+    { id:"tafilah", name:"الطفيلة", country:"الأردن", lat:30.8373, lng:35.6045, method:23 },
+    { id:"maan", name:"معان", country:"الأردن", lat:30.1962, lng:35.7333, method:23 },
+    { id:"jerash", name:"جرش", country:"الأردن", lat:32.2811, lng:35.8994, method:23 },
+    { id:"ajloun", name:"عجلون", country:"الأردن", lat:32.3326, lng:35.7519, method:23 },
+    { id:"mafraq", name:"المفرق", country:"الأردن", lat:32.3434, lng:36.2081, method:23 },
+    { id:"ramtha", name:"الرمثا", country:"الأردن", lat:32.5556, lng:36.0072, method:23 },
+    { id:"wadi_musa", name:"وادي موسى (البتراء)", country:"الأردن", lat:30.3271, lng:35.4820, method:23 },
 
     // ===== فلسطين =====
     { id:"jerusalem", name:"القدس", country:"فلسطين", lat:31.7683, lng:35.2137, method:3 },
@@ -443,17 +467,43 @@
     { id:"hebron", name:"الخليل", country:"فلسطين", lat:31.5326, lng:35.0998, method:3 },
     { id:"nablus", name:"نابلس", country:"فلسطين", lat:32.2211, lng:35.2544, method:3 },
     { id:"ramallah", name:"رام الله", country:"فلسطين", lat:31.9038, lng:35.2034, method:3 },
+    { id:"bethlehem", name:"بيت لحم", country:"فلسطين", lat:31.7054, lng:35.2024, method:3 },
+    { id:"jenin", name:"جنين", country:"فلسطين", lat:32.4611, lng:35.2960, method:3 },
+    { id:"tulkarm", name:"طولكرم", country:"فلسطين", lat:32.3108, lng:35.0286, method:3 },
+    { id:"qalqilya", name:"قلقيلية", country:"فلسطين", lat:32.1892, lng:34.9700, method:3 },
+    { id:"khan_yunis", name:"خان يونس", country:"فلسطين", lat:31.3469, lng:34.3029, method:3 },
+    { id:"rafah", name:"رفح", country:"فلسطين", lat:31.2980, lng:34.2469, method:3 },
+    { id:"jericho", name:"أريحا", country:"فلسطين", lat:31.8667, lng:35.4500, method:3 },
+    { id:"salfit", name:"سلفيت", country:"فلسطين", lat:32.0836, lng:35.1798, method:3 },
+    { id:"tubas", name:"طوباس", country:"فلسطين", lat:32.3211, lng:35.3689, method:3 },
 
     // ===== لبنان =====
     { id:"beirut", name:"بيروت", country:"لبنان", lat:33.8938, lng:35.5018, method:3 },
     { id:"tripolilb", name:"طرابلس", country:"لبنان", lat:34.4335, lng:35.8497, method:3 },
     { id:"sidon", name:"صيدا", country:"لبنان", lat:33.5571, lng:35.3715, method:3 },
+    { id:"zahle", name:"زحلة", country:"لبنان", lat:33.8463, lng:35.9019, method:3 },
+    { id:"baalbek", name:"بعلبك", country:"لبنان", lat:34.0059, lng:36.2181, method:3 },
+    { id:"byblos", name:"جبيل", country:"لبنان", lat:34.1230, lng:35.6519, method:3 },
+    { id:"tyre", name:"صور", country:"لبنان", lat:33.2704, lng:35.2038, method:3 },
+    { id:"nabatieh", name:"النبطية", country:"لبنان", lat:33.3789, lng:35.4839, method:3 },
+    { id:"jounieh", name:"جونية", country:"لبنان", lat:33.9808, lng:35.6178, method:3 },
+    { id:"batroun", name:"البترون", country:"لبنان", lat:34.2553, lng:35.6581, method:3 },
+    { id:"aley", name:"عاليه", country:"لبنان", lat:33.8069, lng:35.5978, method:3 },
 
     // ===== سوريا =====
     { id:"damascus", name:"دمشق", country:"سوريا", lat:33.5138, lng:36.2765, method:3 },
     { id:"aleppo", name:"حلب", country:"سوريا", lat:36.2021, lng:37.1343, method:3 },
     { id:"homs", name:"حمص", country:"سوريا", lat:34.7308, lng:36.7090, method:3 },
     { id:"latakia", name:"اللاذقية", country:"سوريا", lat:35.5317, lng:35.7900, method:3 },
+    { id:"hama", name:"حماة", country:"سوريا", lat:35.1318, lng:36.7578, method:3 },
+    { id:"deir_ez_zor", name:"دير الزور", country:"سوريا", lat:35.3359, lng:40.1408, method:3 },
+    { id:"raqqa", name:"الرقة", country:"سوريا", lat:35.9500, lng:39.0167, method:3 },
+    { id:"idlib", name:"إدلب", country:"سوريا", lat:35.9306, lng:36.6339, method:3 },
+    { id:"daraa", name:"درعا", country:"سوريا", lat:32.6189, lng:36.1021, method:3 },
+    { id:"tartus", name:"طرطوس", country:"سوريا", lat:34.8890, lng:35.8866, method:3 },
+    { id:"qamishli", name:"القامشلي", country:"سوريا", lat:37.0522, lng:41.2189, method:3 },
+    { id:"sweida", name:"السويداء", country:"سوريا", lat:32.7094, lng:36.5694, method:3 },
+    { id:"tadmur", name:"تدمر", country:"سوريا", lat:34.5602, lng:38.2842, method:3 },
 
     // ===== العراق =====
     { id:"baghdad", name:"بغداد", country:"العراق", lat:33.3152, lng:44.3661, method:3 },
@@ -461,31 +511,88 @@
     { id:"mosul", name:"الموصل", country:"العراق", lat:36.3400, lng:43.1300, method:3 },
     { id:"erbil", name:"أربيل", country:"العراق", lat:36.1911, lng:44.0092, method:3 },
     { id:"najaf", name:"النجف", country:"العراق", lat:31.9985, lng:44.3398, method:3 },
+    { id:"karbala", name:"كربلاء", country:"العراق", lat:32.6160, lng:44.0249, method:3 },
+    { id:"kirkuk", name:"كركوك", country:"العراق", lat:35.4681, lng:44.3922, method:3 },
+    { id:"sulaymaniyah", name:"السليمانية", country:"العراق", lat:35.5558, lng:45.4351, method:3 },
+    { id:"duhok", name:"دهوك", country:"العراق", lat:36.8617, lng:42.9880, method:3 },
+    { id:"nasiriyah", name:"الناصرية", country:"العراق", lat:31.0429, lng:46.2571, method:3 },
+    { id:"amara", name:"العمارة", country:"العراق", lat:31.8353, lng:47.1443, method:3 },
+    { id:"diwaniyah", name:"الديوانية", country:"العراق", lat:31.9887, lng:44.9247, method:3 },
+    { id:"ramadi", name:"الرمادي", country:"العراق", lat:33.4200, lng:43.3000, method:3 },
+    { id:"fallujah", name:"الفلوجة", country:"العراق", lat:33.3489, lng:43.7867, method:3 },
+    { id:"samarra", name:"سامراء", country:"العراق", lat:34.1959, lng:43.8742, method:3 },
+    { id:"tikrit", name:"تكريت", country:"العراق", lat:34.6044, lng:43.6773, method:3 },
+    { id:"kut", name:"الكوت", country:"العراق", lat:32.5122, lng:45.8188, method:3 },
+    { id:"hillah", name:"الحلة", country:"العراق", lat:32.4839, lng:44.4239, method:3 },
 
     // ===== اليمن =====
     { id:"sanaa", name:"صنعاء", country:"اليمن", lat:15.3694, lng:44.1910, method:3 },
     { id:"aden", name:"عدن", country:"اليمن", lat:12.7855, lng:45.0187, method:3 },
     { id:"taiz", name:"تعز", country:"اليمن", lat:13.5795, lng:44.0209, method:3 },
+    { id:"hodeidah", name:"الحديدة", country:"اليمن", lat:14.7978, lng:42.9545, method:3 },
+    { id:"ibb", name:"إب", country:"اليمن", lat:13.9667, lng:44.1833, method:3 },
+    { id:"mukalla", name:"المكلا", country:"اليمن", lat:14.5425, lng:49.1242, method:3 },
+    { id:"dhamar", name:"ذمار", country:"اليمن", lat:14.5427, lng:44.4058, method:3 },
+    { id:"saada", name:"صعدة", country:"اليمن", lat:16.9402, lng:43.7636, method:3 },
+    { id:"marib", name:"مأرب", country:"اليمن", lat:15.4622, lng:45.3258, method:3 },
+    { id:"zinjibar", name:"زنجبار", country:"اليمن", lat:13.1281, lng:45.3792, method:3 },
+    { id:"seiyun", name:"سيئون", country:"اليمن", lat:15.9427, lng:48.7883, method:3 },
 
     // ===== السودان =====
     { id:"khartoum", name:"الخرطوم", country:"السودان", lat:15.5007, lng:32.5599, method:3 },
     { id:"omdurman", name:"أم درمان", country:"السودان", lat:15.6445, lng:32.4777, method:3 },
     { id:"portsudan", name:"بورتسودان", country:"السودان", lat:19.6158, lng:37.2164, method:3 },
+    { id:"kassala", name:"كسلا", country:"السودان", lat:15.4514, lng:36.4000, method:3 },
+    { id:"nyala", name:"نيالا", country:"السودان", lat:12.0500, lng:24.8833, method:3 },
+    { id:"el_obeid", name:"الأبيض", country:"السودان", lat:13.1833, lng:30.2167, method:3 },
+    { id:"wad_madani", name:"ود مدني", country:"السودان", lat:14.4012, lng:33.5199, method:3 },
+    { id:"atbara", name:"عطبرة", country:"السودان", lat:17.7022, lng:33.9867, method:3 },
+    { id:"el_fasher", name:"الفاشر", country:"السودان", lat:13.6289, lng:25.3489, method:3 },
+    { id:"kosti", name:"كوستي", country:"السودان", lat:13.1636, lng:32.6656, method:3 },
+    { id:"gedaref", name:"القضارف", country:"السودان", lat:14.0350, lng:35.3833, method:3 },
 
     // ===== ليبيا =====
     { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872, lng:13.1913, method:3 },
     { id:"benghazi", name:"بنغازي", country:"ليبيا", lat:32.1167, lng:20.0667, method:3 },
     { id:"misrata", name:"مصراتة", country:"ليبيا", lat:32.3754, lng:15.0925, method:3 },
+    { id:"sabha", name:"سبها", country:"ليبيا", lat:27.0377, lng:14.4283, method:3 },
+    { id:"zawiya", name:"الزاوية", country:"ليبيا", lat:32.7522, lng:12.7278, method:3 },
+    { id:"tobruk", name:"طبرق", country:"ليبيا", lat:32.0836, lng:23.9764, method:3 },
+    { id:"bayda", name:"البيضاء", country:"ليبيا", lat:32.7627, lng:21.7551, method:3 },
+    { id:"sirte", name:"سرت", country:"ليبيا", lat:31.2089, lng:16.5887, method:3 },
+    { id:"zliten", name:"زليتن", country:"ليبيا", lat:32.4674, lng:14.5686, method:3 },
+    { id:"derna", name:"درنة", country:"ليبيا", lat:32.7625, lng:22.6367, method:3 },
+    { id:"ghadames", name:"غدامس", country:"ليبيا", lat:30.1333, lng:9.5000, method:3 },
 
     // ===== تونس =====
     { id:"tunis", name:"تونس", country:"تونس", lat:36.8065, lng:10.1815, method:18 },
     { id:"sfax", name:"صفاقس", country:"تونس", lat:34.7406, lng:10.7603, method:18 },
     { id:"sousse", name:"سوسة", country:"تونس", lat:35.8256, lng:10.6369, method:18 },
+    { id:"kairouan", name:"القيروان", country:"تونس", lat:35.6781, lng:10.0963, method:18 },
+    { id:"bizerte", name:"بنزرت", country:"تونس", lat:37.2744, lng:9.8739, method:18 },
+    { id:"gabes", name:"قابس", country:"تونس", lat:33.8815, lng:10.0982, method:18 },
+    { id:"gafsa", name:"قفصة", country:"تونس", lat:34.4250, lng:8.7842, method:18 },
+    { id:"monastir", name:"المنستير", country:"تونس", lat:35.7643, lng:10.8113, method:18 },
+    { id:"nabeul", name:"نابل", country:"تونس", lat:36.4561, lng:10.7376, method:18 },
+    { id:"tozeur", name:"توزر", country:"تونس", lat:33.9197, lng:8.1335, method:18 },
+    { id:"djerba", name:"جربة", country:"تونس", lat:33.8076, lng:10.8451, method:18 },
+    { id:"kasserine", name:"القصرين", country:"تونس", lat:35.1667, lng:8.8333, method:18 },
 
     // ===== الجزائر =====
     { id:"algiers", name:"الجزائر", country:"الجزائر", lat:36.7538, lng:3.0588, method:19 },
     { id:"oran", name:"وهران", country:"الجزائر", lat:35.6971, lng:-0.6308, method:19 },
     { id:"constantine", name:"قسنطينة", country:"الجزائر", lat:36.3650, lng:6.6147, method:19 },
+    { id:"annaba", name:"عنابة", country:"الجزائر", lat:36.9000, lng:7.7667, method:19 },
+    { id:"setif", name:"سطيف", country:"الجزائر", lat:36.1898, lng:5.4108, method:19 },
+    { id:"batna", name:"باتنة", country:"الجزائر", lat:35.5559, lng:6.1741, method:19 },
+    { id:"blida", name:"البليدة", country:"الجزائر", lat:36.4700, lng:2.8300, method:19 },
+    { id:"tlemcen", name:"تلمسان", country:"الجزائر", lat:34.8828, lng:-1.3167, method:19 },
+    { id:"ghardaia", name:"غرداية", country:"الجزائر", lat:32.4900, lng:3.6700, method:19 },
+    { id:"bejaia", name:"بجاية", country:"الجزائر", lat:36.7500, lng:5.0833, method:19 },
+    { id:"ouargla", name:"ورقلة", country:"الجزائر", lat:31.9500, lng:5.3167, method:19 },
+    { id:"biskra", name:"بسكرة", country:"الجزائر", lat:34.8500, lng:5.7333, method:19 },
+    { id:"tizi_ouzou", name:"تيزي وزو", country:"الجزائر", lat:36.7169, lng:4.0497, method:19 },
+    { id:"tamanrasset", name:"تمنراست", country:"الجزائر", lat:22.7850, lng:5.5228, method:19 },
 
     // ===== المغرب =====
     { id:"rabat", name:"الرباط", country:"المغرب", lat:34.0209, lng:-6.8416, method:21 },
@@ -493,20 +600,47 @@
     { id:"marrakech", name:"مراكش", country:"المغرب", lat:31.6295, lng:-7.9811, method:21 },
     { id:"fes", name:"فاس", country:"المغرب", lat:34.0331, lng:-5.0003, method:21 },
     { id:"tangier", name:"طنجة", country:"المغرب", lat:35.7595, lng:-5.8340, method:21 },
+    { id:"agadir", name:"أكادير", country:"المغرب", lat:30.4278, lng:-9.5981, method:21 },
+    { id:"meknes", name:"مكناس", country:"المغرب", lat:33.8935, lng:-5.5473, method:21 },
+    { id:"oujda", name:"وجدة", country:"المغرب", lat:34.6867, lng:-1.9114, method:21 },
+    { id:"kenitra", name:"القنيطرة", country:"المغرب", lat:34.2610, lng:-6.5802, method:21 },
+    { id:"tetouan", name:"تطوان", country:"المغرب", lat:35.5785, lng:-5.3684, method:21 },
+    { id:"safi", name:"آسفي", country:"المغرب", lat:32.2994, lng:-9.2372, method:21 },
+    { id:"el_jadida", name:"الجديدة", country:"المغرب", lat:33.2544, lng:-8.5089, method:21 },
+    { id:"nador", name:"الناظور", country:"المغرب", lat:35.1681, lng:-2.9287, method:21 },
+    { id:"essaouira", name:"الصويرة", country:"المغرب", lat:31.5085, lng:-9.7595, method:21 },
+    { id:"ouarzazate", name:"ورزازات", country:"المغرب", lat:30.9189, lng:-6.8934, method:21 },
+    { id:"laayoune", name:"العيون", country:"المغرب", lat:27.1500, lng:-13.2000, method:21 },
 
     // ===== موريتانيا =====
     { id:"nouakchott", name:"نواكشوط", country:"موريتانيا", lat:18.0735, lng:-15.9582, method:3 },
     { id:"nouadhibou", name:"نواذيبو", country:"موريتانيا", lat:20.9425, lng:-17.0362, method:3 },
+    { id:"kiffa", name:"كيفة", country:"موريتانيا", lat:16.6167, lng:-11.4000, method:3 },
+    { id:"rosso", name:"روصو", country:"موريتانيا", lat:16.5136, lng:-15.8058, method:3 },
+    { id:"atar", name:"أطار", country:"موريتانيا", lat:20.5169, lng:-13.0500, method:3 },
+    { id:"zouerate", name:"ازويرات", country:"موريتانيا", lat:22.7333, lng:-12.4667, method:3 },
+    { id:"kaedi", name:"كيهيدي", country:"موريتانيا", lat:16.1500, lng:-13.5000, method:3 },
 
     // ===== الصومال =====
     { id:"mogadishu", name:"مقديشو", country:"الصومال", lat:2.0469, lng:45.3182, method:3 },
     { id:"hargeisa", name:"هرجيسا", country:"الصومال", lat:9.5624, lng:44.0770, method:3 },
+    { id:"kismayo", name:"كيسمايو", country:"الصومال", lat:-0.3582, lng:42.5454, method:3 },
+    { id:"bosaso", name:"بوصاصو", country:"الصومال", lat:11.2833, lng:49.1833, method:3 },
+    { id:"baidoa", name:"بيداوا", country:"الصومال", lat:3.1167, lng:43.6500, method:3 },
+    { id:"berbera", name:"بربرة", country:"الصومال", lat:10.4396, lng:45.0143, method:3 },
+    { id:"garowe", name:"جروي", country:"الصومال", lat:8.4054, lng:48.4845, method:3 },
 
     // ===== جيبوتي =====
     { id:"djibouti", name:"جيبوتي", country:"جيبوتي", lat:11.5721, lng:43.1456, method:3 },
+    { id:"ali_sabieh", name:"علي صبيح", country:"جيبوتي", lat:11.1547, lng:42.7108, method:3 },
+    { id:"tadjourah", name:"تاجورة", country:"جيبوتي", lat:11.7889, lng:42.8836, method:3 },
+    { id:"obock", name:"أوبوك", country:"جيبوتي", lat:11.9667, lng:43.2833, method:3 },
+    { id:"dikhil", name:"دخيل", country:"جيبوتي", lat:11.1058, lng:42.3711, method:3 },
 
     // ===== جزر القمر =====
-    { id:"moroni", name:"موروني", country:"جزر القمر", lat:11.7172, lng:43.2473, method:3 }
+    { id:"moroni", name:"موروني", country:"جزر القمر", lat:11.7172, lng:43.2473, method:3 },
+    { id:"mutsamudu", name:"موتسامودو", country:"جزر القمر", lat:-12.1667, lng:44.4167, method:3 },
+    { id:"fomboni", name:"فومبوني", country:"جزر القمر", lat:-12.2833, lng:43.7417, method:3 }
 
   ];
 
@@ -535,19 +669,18 @@
     hijri: null,
     gregorian: null,
     _interval: null,
-    soundOn: true,
     lastActiveKey: null,
     ringing: false,
-    ringTimeout: null,
-    activeAudioNodes: []
+    muted: false
   };
 
   const el = {
     themeToggle: document.getElementById("themeToggle"),
-    soundToggle: document.getElementById("soundToggle"),
     azanBanner: document.getElementById("azanBanner"),
     azanBannerText: document.getElementById("azanBannerText"),
     azanStopBtn: document.getElementById("azanStopBtn"),
+    azanAudio: document.getElementById("azanAudio"),
+    testAlertBtn: document.getElementById("testAlertBtn"),
     citySearch: document.getElementById("citySearch"),
     cityList: document.getElementById("cityList"),
     dateLine: document.getElementById("dateLine"),
@@ -574,60 +707,22 @@
   });
   applyTheme();
 
-  // ---------- sound toggle ----------
-  function applySoundIcon(){
-    el.soundToggle.textContent = state.soundOn ? "🔔" : "🔕";
-    el.soundToggle.classList.toggle("muted", !state.soundOn);
+  // ---------- audio (real azan recording supplied by the user) ----------
+  function primeAudio(){
+    // browsers block autoplay until a user gesture has happened once;
+    // this silent play+pause "unlocks" the element for later automatic playback
+    el.azanAudio.play().then(()=>{
+      el.azanAudio.pause();
+      el.azanAudio.currentTime = 0;
+    }).catch(()=>{});
   }
-  el.soundToggle.addEventListener("click", ()=>{
-    state.soundOn = !state.soundOn;
-    applySoundIcon();
-    if(!state.soundOn) stopAdhanAlert();
+  document.addEventListener("click", primeAudio, { once:true });
+  document.addEventListener("touchstart", primeAudio, { once:true });
+
+  el.azanAudio.addEventListener("ended", ()=>{
+    // the azan finished on its own: banner goes away completely
+    resetAlert();
   });
-  applySoundIcon();
-
-  // ---------- audio (synthesized, no copyrighted recordings) ----------
-  let audioCtx = null;
-  function ensureAudio(){
-    if(!audioCtx){
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if(Ctx) audioCtx = new Ctx();
-    }
-    if(audioCtx && audioCtx.state === "suspended") audioCtx.resume();
-  }
-  document.addEventListener("click", ensureAudio);
-  document.addEventListener("touchstart", ensureAudio, { once:true });
-
-  function playTone(freq, startTime, duration, gainPeak){
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, startTime);
-    gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(startTime);
-    osc.stop(startTime + duration + 0.05);
-    state.activeAudioNodes.push(osc);
-    osc.onended = ()=>{
-      const i = state.activeAudioNodes.indexOf(osc);
-      if(i > -1) state.activeAudioNodes.splice(i,1);
-    };
-  }
-
-  // a calm, gentle rising-and-falling phrase (original melody, not a recitation)
-  function playPhrase(){
-    if(!audioCtx) return 0;
-    const t0 = audioCtx.currentTime + 0.05;
-    const notes = [392.00, 440.00, 523.25, 440.00, 392.00, 329.63];
-    let t = t0;
-    notes.forEach(f=>{
-      playTone(f, t, 1.1, 0.16);
-      t += 0.8;
-    });
-    return t - t0;
-  }
 
   function showBanner(name){
     el.azanBannerText.textContent = `حان وقت صلاة ${name}`;
@@ -637,38 +732,46 @@
     el.azanBanner.classList.remove("show");
   }
 
-  function startAdhanAlert(prayerName){
-    if(!state.soundOn) return;
-    ensureAudio();
-    if(!audioCtx) return;
-    stopAdhanAlert();
-    state.ringing = true;
-    showBanner(prayerName);
-
-    let repeats = 0;
-    const maxRepeats = 4;
-    function loop(){
-      if(!state.ringing) return;
-      const dur = playPhrase();
-      repeats++;
-      if(repeats < maxRepeats){
-        state.ringTimeout = setTimeout(loop, (dur + 1) * 1000);
-      } else {
-        state.ringTimeout = setTimeout(stopAdhanAlert, (dur + 0.3) * 1000);
-      }
-    }
-    loop();
-  }
-
-  function stopAdhanAlert(){
+  // full reset: used when a new prayer starts, or the azan finishes naturally
+  function resetAlert(){
     state.ringing = false;
-    if(state.ringTimeout){ clearTimeout(state.ringTimeout); state.ringTimeout = null; }
-    state.activeAudioNodes.forEach(osc=>{ try{ osc.stop(); }catch(e){} });
-    state.activeAudioNodes = [];
+    state.muted = false;
+    el.azanAudio.pause();
+    el.azanAudio.currentTime = 0;
+    el.azanStopBtn.textContent = "كتم";
     hideBanner();
   }
 
-  el.azanStopBtn.addEventListener("click", stopAdhanAlert);
+  function startAdhanAlert(prayerName){
+    resetAlert();
+    state.ringing = true;
+    showBanner(prayerName);
+    el.azanAudio.currentTime = 0;
+    el.azanAudio.play().catch(err=>{
+      console.error("azan playback failed:", err);
+    });
+  }
+
+  // mute pauses in place; unmute resumes from the exact same spot
+  function toggleMute(){
+    if(!state.ringing) return;
+    state.muted = !state.muted;
+    if(state.muted){
+      el.azanAudio.pause();
+      el.azanStopBtn.textContent = "إلغاء الكتم";
+    } else {
+      el.azanAudio.play().catch(()=>{});
+      el.azanStopBtn.textContent = "كتم";
+    }
+  }
+  el.azanStopBtn.addEventListener("click", toggleMute);
+
+  el.testAlertBtn.addEventListener("click", ()=>{
+    const name = el.nextName.textContent && el.nextName.textContent !== "—"
+      ? el.nextName.textContent
+      : "الاختبار";
+    startAdhanAlert(name);
+  });
 
   // ---------- searchable city list ----------
   function renderCityList(filterText){
@@ -753,7 +856,7 @@
   function loadTimings(){
     const city = CITIES.find(c=>c.id === state.cityId);
     if(state._interval) clearInterval(state._interval);
-    stopAdhanAlert();
+    resetAlert();
     state.lastActiveKey = null;
     setLoading();
 
