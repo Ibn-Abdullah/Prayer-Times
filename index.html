@@ -658,9 +658,20 @@
   // the five obligatory prayers, used for next-prayer / countdown / alert logic
   const OBLIGATORY = ["Fajr","Dhuhr","Asr","Maghrib","Isha"];
 
+  const SAVED_CITY_KEY = "prayerTimesSelectedCityId";
+
+  function getSavedCityId(){
+    const savedCityId = localStorage.getItem(SAVED_CITY_KEY);
+    return CITIES.some(c=>c.id === savedCityId) ? savedCityId : "cairo";
+  }
+
+  function saveCityId(id){
+    localStorage.setItem(SAVED_CITY_KEY, id);
+  }
+
   const state = {
     theme: "night",
-    cityId: "cairo",
+    cityId: getSavedCityId(),
     timings: null,
     hijri: null,
     gregorian: null,
@@ -788,6 +799,7 @@
   function selectCity(id){
     const city = CITIES.find(c=>c.id === id);
     state.cityId = id;
+    saveCityId(id);
     el.citySearch.value = `${city.name}، ${city.country}`;
     el.cityList.classList.remove("open");
     loadTimings();
