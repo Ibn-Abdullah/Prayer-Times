@@ -1,9 +1,9 @@
-const CACHE_NAME = "prayer-times-v1";
+const CACHE_NAME = "prayer-times-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./site-icon.svg",
+  "./ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
   "./adhan.mp3"
 ];
 

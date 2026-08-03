@@ -13,9 +13,9 @@
   "categories": ["lifestyle", "utilities"],
   "icons": [
     {
-      "src": "site-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
+      "sizes": "500x500",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
