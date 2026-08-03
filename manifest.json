@@ -1,0 +1,22 @@
+{
+  "name": "مواقيت الصلاة",
+  "short_name": "الصلاة",
+  "description": "موقع بسيط لمعرفة مواقيت الصلاة والتنبيه عند الأذان.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F1B2D",
+  "theme_color": "#0F1B2D",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "site-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
