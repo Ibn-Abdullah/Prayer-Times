@@ -102,7 +102,11 @@
     font-weight:700;
     font-size:.84rem;
     cursor:pointer;
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    display:none;
+
     display:flex;
+ main
     align-items:center;
     justify-content:center;
     gap:6px;
@@ -344,6 +348,10 @@
     color:var(--text-muted);
     font-size:.78rem;
     line-height:1.9;
+  }
+
+  @media (hover:none) and (pointer:coarse) and (max-width:768px){
+    .notify-btn{ display:flex; }
   }
 
   @media (max-width:460px){
@@ -773,7 +781,12 @@
     ringing: false,
     muted: false,
     notificationTimers: [],
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    swRegistration: null,
+    mobileExperience: false
+
     swRegistration: null
+ main
   };
 
   const el = {
@@ -802,6 +815,17 @@
     arcPoints: document.getElementById("arcPoints"),
     arcGlyph: document.getElementById("arcGlyph")
   };
+
+  function isMobileExperience(){
+    return window.matchMedia("(hover: none) and (pointer: coarse) and (max-width: 768px)").matches;
+  }
+
+  state.mobileExperience = isMobileExperience();
+  window.addEventListener("resize", ()=>{
+    state.mobileExperience = isMobileExperience();
+    updateNotifyButton();
+    if(!state.mobileExperience) clearPrayerNotificationTimers();
+  });
 
   // ---------- theme (night by default) ----------
   function applyTheme(){
@@ -852,7 +876,11 @@
   el.alarmCloseBtn.addEventListener("click", ()=> el.prayerAlarm.classList.remove("show"));
 
   const alarmFromUrl = new URLSearchParams(window.location.search).get("alarm");
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+  if(alarmFromUrl && state.mobileExperience){
+
   if(alarmFromUrl){
+ main
     window.addEventListener("load", ()=> showPrayerAlarm(alarmFromUrl));
   }
 
@@ -865,14 +893,22 @@
     el.azanAudio.currentTime = 0;
     el.azanStopBtn.textContent = "كتم";
     hideBanner();
+    el.prayerAlarm.classList.remove("show");
   }
 
   function startAdhanAlert(prayerName){
     resetAlert();
     state.ringing = true;
     showBanner(prayerName);
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(state.mobileExperience){
+      showPrayerAlarm(prayerName);
+      showPrayerNotification(prayerName);
+    }
+
     showPrayerAlarm(prayerName);
     showPrayerNotification(prayerName);
+ main
     el.azanAudio.currentTime = 0;
     el.azanAudio.play().catch(err=>{
       console.error("azan playback failed:", err);
@@ -1007,7 +1043,11 @@
       navigator.serviceWorker.register("service-worker.js").then(reg=>{
         state.swRegistration = reg;
         updateNotifyButton();
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+        if(state.mobileExperience) schedulePrayerNotifications();
+
         schedulePrayerNotifications();
+ main
       }).catch(err=>{
         console.warn("Service worker registration failed:", err);
       });
@@ -1017,7 +1057,7 @@
   window.addEventListener("beforeinstallprompt", event=>{
     event.preventDefault();
     deferredInstallPrompt = event;
-    el.installBtn.classList.add("show");
+    if(state.mobileExperience) el.installBtn.classList.add("show");
   });
 
   el.installBtn.addEventListener("click", async ()=>{
@@ -1040,14 +1080,27 @@
 
   // ---------- mobile notifications ----------
   function updateNotifyButton(){
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    const supported = state.mobileExperience && "Notification" in window;
+    const granted = supported && Notification.permission === "granted";
+    el.notifyBtn.hidden = !state.mobileExperience;
+
     const supported = "Notification" in window;
     const granted = supported && Notification.permission === "granted";
+ main
     el.notifyBtn.disabled = !supported;
     el.notifyBtn.classList.toggle("active", granted);
     el.notifyBtn.textContent = granted ? "🔔 مفعّلة" : "🔔 تنبيهات";
   }
 
   async function requestNotifications(){
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(!state.mobileExperience){
+      alert("التنبيهات متاحة على الموبايل فقط.");
+      return;
+    }
+
+ main
     if(!("Notification" in window)){
       alert("المتصفح الحالي لا يدعم إشعارات الويب.");
       return;
@@ -1073,7 +1126,11 @@
   }
 
   function showPersistentNextNotification(name, remaining){
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return;
+
     if(!("Notification" in window) || Notification.permission !== "granted") return;
+ main
     postToServiceWorker({
       type:"SHOW_NEXT_PRAYER",
       title:`الصلاة القادمة: ${name}`,
@@ -1082,7 +1139,11 @@
   }
 
   function showPrayerNotification(name){
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return;
+
     if(!("Notification" in window) || Notification.permission !== "granted") return;
+ main
     postToServiceWorker({
       type:"SHOW_PRAYER_NOW",
       title:`حان وقت صلاة ${name}`,
@@ -1098,7 +1159,11 @@
 
   function schedulePrayerNotifications(){
     clearPrayerNotificationTimers();
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(!state.mobileExperience || !state.timings || !("Notification" in window) || Notification.permission !== "granted") return;
+
     if(!state.timings || !("Notification" in window) || Notification.permission !== "granted") return;
+ main
     const now = new Date();
     OBLIGATORY.forEach(key=>{
       const [hours, minutes] = state.timings[key].split(":").map(Number);
@@ -1163,11 +1228,27 @@
     const methodName = METHOD_NAMES[city.method] || "طريقة قياسية";
     el.footerNote.innerHTML = `${city.name}، ${city.country} · طريقة الحساب: ${methodName}`;
 
+    persistWidgetData(city);
     buildArc();
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(state.mobileExperience) schedulePrayerNotifications();
+
     schedulePrayerNotifications();
+ main
     tick();
     if(state._interval) clearInterval(state._interval);
     state._interval = setInterval(tick, 1000);
+  }
+
+
+  function persistWidgetData(city){
+    if(!state.mobileExperience || !state.timings) return;
+    const payload = {
+      updatedAt: Date.now(),
+      city: { id: city.id, name: city.name, country: city.country, lat: city.lat, lng: city.lng, method: city.method },
+      timings: state.timings
+    };
+    localStorage.setItem("prayerTimesWidgetData", JSON.stringify(payload));
   }
 
   // ---------- arc geometry ----------
@@ -1256,7 +1337,11 @@
     const nextObj = PRAYERS.find(p=>p.key === next.key);
     el.nextName.textContent = nextObj ? nextObj.name : "الفجر";
     el.countdown.textContent = fmtCountdown(Math.max(diffSeconds,0));
+ codex/update-mobile-app-for-prayer-notifications-q946q3
+    if(state.mobileExperience && "Notification" in window && Notification.permission === "granted"){
+
     if("Notification" in window && Notification.permission === "granted" && diffSeconds % 60 === 0){
+ main
       showPersistentNextNotification(nextObj ? nextObj.name : "الفجر", el.countdown.textContent);
     }
 
@@ -1276,7 +1361,7 @@
     }
     if(!activeKey) activeKey = "Isha";
 
-    if(state.lastActiveKey !== null && state.lastActiveKey !== activeKey){
+    if(state.mobileExperience && state.lastActiveKey !== null && state.lastActiveKey !== activeKey){
       const startedPrayer = PRAYERS.find(p=>p.key === activeKey);
       startAdhanAlert(startedPrayer ? startedPrayer.name : activeKey);
     }
