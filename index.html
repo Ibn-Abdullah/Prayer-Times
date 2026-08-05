@@ -102,11 +102,7 @@
     font-weight:700;
     font-size:.84rem;
     cursor:pointer;
- codex/update-mobile-app-for-prayer-notifications-q946q3
     display:none;
-
-    display:flex;
- main
     align-items:center;
     justify-content:center;
     gap:6px;
@@ -432,7 +428,7 @@
 (function(){
 
   const CITIES = [
-     // ===== مصر =====
+    // ===== مصر =====
     { id:"cairo", name:"القاهرة", country:"مصر", lat:30.0444, lng:31.2357, method:5 },
     { id:"alex", name:"الإسكندرية", country:"مصر", lat:31.2001, lng:29.9187, method:5 },
     { id:"giza", name:"الجيزة", country:"مصر", lat:30.0131, lng:31.2089, method:5 },
@@ -649,6 +645,8 @@
     { id:"gedaref", name:"القضارف", country:"السودان", lat:14.0350, lng:35.3833, method:3 },
 
     // ===== ليبيا =====
+    { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872
+         // ===== ليبيا =====
     { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872, lng:13.1913, method:3 },
     { id:"benghazi", name:"بنغازي", country:"ليبيا", lat:32.1167, lng:20.0667, method:3 },
     { id:"misrata", name:"مصراتة", country:"ليبيا", lat:32.3754, lng:15.0925, method:3 },
@@ -738,15 +736,12 @@
     { id:"moroni", name:"موروني", country:"جزر القمر", lat:11.7172, lng:43.2473, method:3 },
     { id:"mutsamudu", name:"موتسامودو", country:"جزر القمر", lat:-12.1667, lng:44.4167, method:3 },
     { id:"fomboni", name:"فومبوني", country:"جزر القمر", lat:-12.2833, lng:43.7417, method:3 }
-
   ];
-
-  const METHOD_NAMES = {
+    const METHOD_NAMES = {
     3:"رابطة العالم الإسلامي", 4:"أم القرى", 5:"مصر", 8:"دول الخليج",
     9:"الكويت", 10:"قطر", 18:"تونس", 19:"الجزائر", 21:"المغرب", 23:"الأردن"
   };
 
-  // order matters: this is the display order in the grid (sunrise sits right after Fajr)
   const PRAYERS = [
     { key:"Fajr",    name:"الفجر" },
     { key:"Sunrise", name:"الشروق", secondary:true },
@@ -756,9 +751,7 @@
     { key:"Isha",    name:"العشاء" }
   ];
 
-  // the five obligatory prayers, used for next-prayer / countdown / alert logic
   const OBLIGATORY = ["Fajr","Dhuhr","Asr","Maghrib","Isha"];
-
   const SAVED_CITY_KEY = "prayerTimesSelectedCityId";
 
   function getSavedCityId(){
@@ -781,12 +774,8 @@
     ringing: false,
     muted: false,
     notificationTimers: [],
- codex/update-mobile-app-for-prayer-notifications-q946q3
     swRegistration: null,
     mobileExperience: false
-
-    swRegistration: null
- main
   };
 
   const el = {
@@ -827,7 +816,7 @@
     if(!state.mobileExperience) clearPrayerNotificationTimers();
   });
 
-  // ---------- theme (night by default) ----------
+  // ---------- theme ----------
   function applyTheme(){
     document.documentElement.setAttribute("data-theme", state.theme === "day" ? "day" : "night");
     el.themeToggle.textContent = state.theme === "day" ? "☀" : "☾";
@@ -838,10 +827,8 @@
   });
   applyTheme();
 
-  // ---------- audio (real azan recording supplied by the user) ----------
+  // ---------- audio ----------
   function primeAudio(){
-    // browsers block autoplay until a user gesture has happened once;
-    // this silent play+pause "unlocks" the element for later automatic playback
     el.azanAudio.play().then(()=>{
       el.azanAudio.pause();
       el.azanAudio.currentTime = 0;
@@ -851,7 +838,6 @@
   document.addEventListener("touchstart", primeAudio, { once:true });
 
   el.azanAudio.addEventListener("ended", ()=>{
-    // the azan finished on its own: banner goes away completely
     resetAlert();
   });
 
@@ -868,6 +854,7 @@
   }
 
   function showPrayerAlarm(name){
+    if(!state.mobileExperience) return; // ✅ Mobile only
     el.alarmTitle.textContent = `حان وقت صلاة ${name}`;
     el.alarmClock.textContent = formatCurrentClock();
     el.prayerAlarm.classList.add("show");
@@ -876,15 +863,10 @@
   el.alarmCloseBtn.addEventListener("click", ()=> el.prayerAlarm.classList.remove("show"));
 
   const alarmFromUrl = new URLSearchParams(window.location.search).get("alarm");
- codex/update-mobile-app-for-prayer-notifications-q946q3
-  if(alarmFromUrl && state.mobileExperience){
-
-  if(alarmFromUrl){
- main
+  if(alarmFromUrl && state.mobileExperience){ // ✅ Mobile only
     window.addEventListener("load", ()=> showPrayerAlarm(alarmFromUrl));
   }
 
-  // full reset: used when a new prayer starts, or the azan finishes naturally
   function resetAlert(){
     state.ringing = false;
     state.muted = false;
@@ -900,23 +882,16 @@
     resetAlert();
     state.ringing = true;
     showBanner(prayerName);
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(state.mobileExperience){
+    if(state.mobileExperience){ // ✅ Mobile only
       showPrayerAlarm(prayerName);
       showPrayerNotification(prayerName);
     }
-
-    showPrayerAlarm(prayerName);
-    showPrayerNotification(prayerName);
- main
     el.azanAudio.currentTime = 0;
     el.azanAudio.play().catch(err=>{
       console.error("azan playback failed:", err);
     });
   }
 
-  // mute only silences the output; playback keeps advancing underneath,
-  // so unmuting lands wherever the azan actually is "now" in real time
   function toggleMute(){
     if(!state.ringing) return;
     state.muted = !state.muted;
@@ -925,7 +900,7 @@
   }
   el.azanStopBtn.addEventListener("click", toggleMute);
 
-  // ---------- searchable city list ----------
+  // ---------- city search ----------
   function renderCityList(filterText){
     const q = (filterText || "").trim();
     const matches = q
@@ -976,7 +951,6 @@
     }
   });
 
-  // set initial search box text to default city
   (function initCityBox(){
     const c = CITIES.find(x=>x.id === state.cityId);
     el.citySearch.value = `${c.name}، ${c.country}`;
@@ -1014,8 +988,6 @@
     setLoading();
 
     const directUrl = `https://api.aladhan.com/v1/timings?latitude=${city.lat}&longitude=${city.lng}&method=${city.method}`;
-    // Aladhan's API sometimes omits CORS headers for direct browser requests,
-    // so if the direct call fails we retry through a CORS-friendly relay.
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
 
     fetchJson(directUrl)
@@ -1035,7 +1007,7 @@
 
   el.retryBtn.addEventListener("click", loadTimings);
 
-  // ---------- install prompt / PWA ----------
+  // ---------- install / PWA ----------
   let deferredInstallPrompt = null;
 
   if("serviceWorker" in navigator){
@@ -1043,11 +1015,7 @@
       navigator.serviceWorker.register("service-worker.js").then(reg=>{
         state.swRegistration = reg;
         updateNotifyButton();
- codex/update-mobile-app-for-prayer-notifications-q946q3
-        if(state.mobileExperience) schedulePrayerNotifications();
-
-        schedulePrayerNotifications();
- main
+        if(state.mobileExperience) schedulePrayerNotifications(); // ✅ Mobile only
       }).catch(err=>{
         console.warn("Service worker registration failed:", err);
       });
@@ -1065,7 +1033,6 @@
       alert("افتح قائمة المتصفح واختر إضافة إلى الشاشة الرئيسية.");
       return;
     }
-
     deferredInstallPrompt.prompt();
     await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
@@ -1077,30 +1044,21 @@
     el.installBtn.classList.remove("show");
   });
 
-
-  // ---------- mobile notifications ----------
+  // ---------- notifications ----------
   function updateNotifyButton(){
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    const supported = state.mobileExperience && "Notification" in window;
+    const supported = state.mobileExperience && "Notification" in window; // ✅ Mobile only
     const granted = supported && Notification.permission === "granted";
-    el.notifyBtn.hidden = !state.mobileExperience;
-
-    const supported = "Notification" in window;
-    const granted = supported && Notification.permission === "granted";
- main
+    el.notifyBtn.hidden = !state.mobileExperience; // ✅ Hide on desktop
     el.notifyBtn.disabled = !supported;
     el.notifyBtn.classList.toggle("active", granted);
     el.notifyBtn.textContent = granted ? "🔔 مفعّلة" : "🔔 تنبيهات";
   }
 
   async function requestNotifications(){
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(!state.mobileExperience){
+    if(!state.mobileExperience){ // ✅ Mobile only
       alert("التنبيهات متاحة على الموبايل فقط.");
       return;
     }
-
- main
     if(!("Notification" in window)){
       alert("المتصفح الحالي لا يدعم إشعارات الويب.");
       return;
@@ -1126,11 +1084,7 @@
   }
 
   function showPersistentNextNotification(name, remaining){
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return;
-
-    if(!("Notification" in window) || Notification.permission !== "granted") return;
- main
+    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
     postToServiceWorker({
       type:"SHOW_NEXT_PRAYER",
       title:`الصلاة القادمة: ${name}`,
@@ -1139,11 +1093,7 @@
   }
 
   function showPrayerNotification(name){
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return;
-
-    if(!("Notification" in window) || Notification.permission !== "granted") return;
- main
+    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
     postToServiceWorker({
       type:"SHOW_PRAYER_NOW",
       title:`حان وقت صلاة ${name}`,
@@ -1159,11 +1109,7 @@
 
   function schedulePrayerNotifications(){
     clearPrayerNotificationTimers();
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(!state.mobileExperience || !state.timings || !("Notification" in window) || Notification.permission !== "granted") return;
-
-    if(!state.timings || !("Notification" in window) || Notification.permission !== "granted") return;
- main
+    if(!state.mobileExperience || !state.timings || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
     const now = new Date();
     OBLIGATORY.forEach(key=>{
       const [hours, minutes] = state.timings[key].split(":").map(Number);
@@ -1215,7 +1161,6 @@
     el.countdownLabel.textContent = "متبقٍّ حتى الأذان";
     el.retryBtn.style.display = "none";
 
-    // prayer cards (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha)
     el.grid.innerHTML = "";
     PRAYERS.forEach(p=>{
       const card = document.createElement("div");
@@ -1230,19 +1175,14 @@
 
     persistWidgetData(city);
     buildArc();
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(state.mobileExperience) schedulePrayerNotifications();
-
-    schedulePrayerNotifications();
- main
+    if(state.mobileExperience) schedulePrayerNotifications(); // ✅ Mobile only
     tick();
     if(state._interval) clearInterval(state._interval);
     state._interval = setInterval(tick, 1000);
   }
 
-
   function persistWidgetData(city){
-    if(!state.mobileExperience || !state.timings) return;
+    if(!state.mobileExperience || !state.timings) return; // ✅ Mobile only
     const payload = {
       updatedAt: Date.now(),
       city: { id: city.id, name: city.name, country: city.country, lat: city.lat, lng: city.lng, method: city.method },
@@ -1251,7 +1191,7 @@
     localStorage.setItem("prayerTimesWidgetData", JSON.stringify(payload));
   }
 
-  // ---------- arc geometry ----------
+  // ---------- arc ----------
   const ARC = { cx:230, cy:210, r:190, startDeg:200, endDeg:-20 };
 
   function angleForMinute(min, fajrMin, ishaMin){
@@ -1319,7 +1259,7 @@
     el.arcGlyph.textContent = isDaytime ? "☀" : "☾";
   }
 
-  // ---------- ticking ----------
+  // ---------- tick ----------
   function tick(){
     const t = state.timings;
     if(!t) return;
@@ -1337,11 +1277,8 @@
     const nextObj = PRAYERS.find(p=>p.key === next.key);
     el.nextName.textContent = nextObj ? nextObj.name : "الفجر";
     el.countdown.textContent = fmtCountdown(Math.max(diffSeconds,0));
- codex/update-mobile-app-for-prayer-notifications-q946q3
-    if(state.mobileExperience && "Notification" in window && Notification.permission === "granted"){
-
-    if("Notification" in window && Notification.permission === "granted" && diffSeconds % 60 === 0){
- main
+    
+    if(state.mobileExperience && "Notification" in window && Notification.permission === "granted"){ // ✅ Mobile only
       showPersistentNextNotification(nextObj ? nextObj.name : "الفجر", el.countdown.textContent);
     }
 
@@ -1354,14 +1291,13 @@
 
     updateGlyphPosition();
 
-    // detect a prayer time that has just started, and ring the alert
     let activeKey = null;
     for(let i=order.length-1;i>=0;i--){
       if(now >= order[i].min){ activeKey = order[i].key; break; }
     }
     if(!activeKey) activeKey = "Isha";
 
-    if(state.mobileExperience && state.lastActiveKey !== null && state.lastActiveKey !== activeKey){
+    if(state.mobileExperience && state.lastActiveKey !== null && state.lastActiveKey !== activeKey){ // ✅ Mobile only
       const startedPrayer = PRAYERS.find(p=>p.key === activeKey);
       startAdhanAlert(startedPrayer ? startedPrayer.name : activeKey);
     }
@@ -1370,6 +1306,3 @@
 
   loadTimings();
 })();
-</script>
-</body>
-</html>
