@@ -1,4 +1,4 @@
-const CACHE_NAME = "prayer-times-v3";
+const CACHE_NAME = "prayer-times-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -27,13 +27,24 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
+  const requestUrl = new URL(event.request.url);
+  const isAppShell = requestUrl.origin === self.location.origin;
+  const isPrayerApi = requestUrl.hostname.includes("aladhan.com") || requestUrl.hostname.includes("allorigins.win");
+
+  if (isPrayerApi) {
+    event.respondWith(fetch(event.request, { cache: "no-store" }));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
 
       return fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        if (isAppShell && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
         return response;
       });
     })

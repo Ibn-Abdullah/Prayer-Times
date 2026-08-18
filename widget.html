@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
- codex/update-mobile-app-for-prayer-notifications-q946q3
 <meta name="theme-color" content="#4A8FE7">
 <title>ودجت مواقيت الصلاة</title>
 <style>
@@ -31,6 +30,8 @@
 const PRAYERS=[['Fajr','الفجر','☾'],['Dhuhr','الظهر','☀'],['Asr','العصر','☼'],['Maghrib','المغرب','◒'],['Isha','العشاء','☾']];
 const FALLBACK={city:{name:'القاهرة',country:'مصر',lat:30.0444,lng:31.2357,method:5},timings:null};
 let widgetData=null;
+function apiDate(d=new Date()){return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`}
+function normalize(t){return Object.fromEntries(Object.entries(t).map(([k,v])=>[k,String(v).match(/\d{1,2}:\d{2}/)?.[0]||v]))}
 function toMinutes(x){const [h,m]=x.split(':').map(Number);return h*60+m}
 function to12Hour(x){const [h,m]=x.split(':').map(Number);const p=h<12?'ص':'م';let h12=h%12;if(h12===0)h12=12;return `${h12}:${String(m).padStart(2,'0')} ${p}`}
 function fmt(s){const p=n=>String(Math.floor(n)).padStart(2,'0');return `${p(s/3600)}:${p((s%3600)/60)}:${p(s%60)}`}
@@ -38,26 +39,9 @@ function getSavedData(){try{return JSON.parse(localStorage.getItem('prayerTimesW
 function findNext(){const d=new Date(),now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60;const list=PRAYERS.map(([key,name])=>({key,name,min:toMinutes(widgetData.timings[key])}));return list.find(p=>p.min>now)||{...list[0],min:list[0].min+1440}}
 function render(){if(!widgetData?.timings)return;const next=findNext();document.getElementById('nextName').textContent=`${next.name} خلال`;document.getElementById('location').textContent=`${widgetData.city.name}، ${widgetData.city.country}`;document.getElementById('updated').textContent=`آخر تحديث ${new Date(widgetData.updatedAt||Date.now()).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'})}`;document.getElementById('prayers').innerHTML=PRAYERS.map(([key,name,glyph])=>`<article class="item ${key===next.key?'next':''}" data-key="${key}"><div class="glyph">${glyph}</div><div class="name">${name}</div><div class="time">${to12Hour(widgetData.timings[key])}</div></article>`).join('');tick()}
 function tick(){if(!widgetData?.timings)return;const d=new Date(),now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60,next=findNext();document.getElementById('countdown').textContent=fmt(Math.max(0,(next.min-now)*60));document.querySelectorAll('.item').forEach(item=>item.classList.toggle('next',item.dataset.key===next.key));}
-async function load(){try{widgetData=getSavedData();if(!widgetData?.timings){const r=await fetch(`https://api.aladhan.com/v1/timings?latitude=${FALLBACK.city.lat}&longitude=${FALLBACK.city.lng}&method=${FALLBACK.city.method}`);const j=await r.json();widgetData={city:FALLBACK.city,timings:j.data.timings,updatedAt:Date.now()}}render();setInterval(()=>{const previous=findNext().key;tick();if(findNext().key!==previous)render()},1000)}catch(e){document.getElementById('widget').innerHTML='<div class="error">تعذّر تحميل مواقيت الصلاة</div>'}}
+async function load(){try{widgetData=getSavedData();if(!widgetData?.timings){const c=FALLBACK.city;const url=`https://api.aladhan.com/v1/timings/${apiDate()}?latitude=${c.lat}&longitude=${c.lng}&method=${c.method}&school=0&_=${Date.now()}`;const r=await fetch(url,{cache:'no-store'});const j=await r.json();widgetData={city:c,timings:normalize(j.data.timings),updatedAt:Date.now()}}render();setInterval(()=>{const previous=findNext().key;tick();if(findNext().key!==previous)render()},1000)}catch(e){document.getElementById('widget').innerHTML='<div class="error">تعذّر تحميل مواقيت الصلاة</div>'}}
 document.getElementById('refresh').addEventListener('click',()=>location.reload());
 load();
 </script>
 </body>
 </html>
-=======
-<meta name="theme-color" content="#31d0d8">
-<title>ودجت مواقيت الصلاة</title>
-<style>
-  *{box-sizing:border-box} body{margin:0;font-family:Arial,'Tajawal',sans-serif;background:transparent;color:#071923} .widget{width:100%;min-height:100vh;padding:10px;background:#31d0d8;border-radius:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 22px rgba(0,0,0,.18)} .top{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-bottom:3px solid #071923;padding-bottom:6px}.label{font-size:clamp(16px,5vw,22px);font-weight:700}.count{direction:ltr;text-align:left;font-size:clamp(22px,8vw,34px);font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px;font-size:clamp(15px,4.8vw,21px);line-height:1.45}.item{white-space:nowrap}.city{margin-top:auto;text-align:center;font-size:13px;opacity:.75}.error{padding:12px;text-align:center;font-weight:700}
-</style>
-</head>
-<body><main class="widget" id="widget"><div class="top"><div class="label">الصلاة القادمة بعد:</div><div class="count" id="countdown">--:--:--</div></div><div class="grid" id="grid"></div><div class="city" id="city">مواقيت الصلاة</div></main>
-<script>
-const PRAYERS=[['Fajr','الفجر'],['Sunrise','الشروق'],['Dhuhr','الظهر'],['Asr','العصر'],['Maghrib','المغرب'],['Isha','العشاء']]; const OBLIGATORY=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-const city={name:'القاهرة',country:'مصر',lat:30.0444,lng:31.2357,method:5}; let timings=null;
-function toMinutes(x){const [h,m]=x.split(':').map(Number);return h*60+m} function fmt(s){const p=n=>String(Math.floor(n)).padStart(2,'0');return `${p(s/3600)}:${p((s%3600)/60)}:${p(s%60)}`}
-function tick(){if(!timings)return;const d=new Date(),now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60;let next=OBLIGATORY.map(k=>({k,min:toMinutes(timings[k])})).find(p=>p.min>now)||{k:'Fajr',min:toMinutes(timings.Fajr)+1440};document.getElementById('countdown').textContent=fmt(Math.max(0,(next.min-now)*60))}
-async function load(){try{const r=await fetch(`https://api.aladhan.com/v1/timings?latitude=${city.lat}&longitude=${city.lng}&method=${city.method}`);const j=await r.json();timings=j.data.timings;document.getElementById('grid').innerHTML=PRAYERS.map(([k,n])=>`<div class="item">${n}: ${timings[k]}</div>`).join('');document.getElementById('city').textContent=`${city.name}، ${city.country}`;tick();setInterval(tick,1000)}catch(e){document.getElementById('widget').innerHTML='<div class="error">تعذّر تحميل المواقيت</div>'}}
-load();
-</script></body></html>
- main

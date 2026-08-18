@@ -645,8 +645,6 @@
     { id:"gedaref", name:"القضارف", country:"السودان", lat:14.0350, lng:35.3833, method:3 },
 
     // ===== ليبيا =====
-    { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872
-         // ===== ليبيا =====
     { id:"tripoli", name:"طرابلس", country:"ليبيا", lat:32.8872, lng:13.1913, method:3 },
     { id:"benghazi", name:"بنغازي", country:"ليبيا", lat:32.1167, lng:20.0667, method:3 },
     { id:"misrata", name:"مصراتة", country:"ليبيا", lat:32.3754, lng:15.0925, method:3 },
@@ -980,6 +978,19 @@
     });
   }
 
+
+  function formatApiDate(date){
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${day}-${month}-${date.getFullYear()}`;
+  }
+
+  function normalizeTimings(timings){
+    return Object.fromEntries(
+      Object.entries(timings).map(([key, value])=>[key, String(value).match(/\d{1,2}:\d{2}/)?.[0] || value])
+    );
+  }
+
   function loadTimings(){
     const city = CITIES.find(c=>c.id === state.cityId);
     if(state._interval) clearInterval(state._interval);
@@ -987,14 +998,15 @@
     state.lastActiveKey = null;
     setLoading();
 
-    const directUrl = `https://api.aladhan.com/v1/timings?latitude=${city.lat}&longitude=${city.lng}&method=${city.method}`;
+    const apiDate = formatApiDate(new Date());
+    const directUrl = `https://api.aladhan.com/v1/timings/${apiDate}?latitude=${city.lat}&longitude=${city.lng}&method=${city.method}&school=0&_=${Date.now()}`;
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
 
     fetchJson(directUrl)
       .catch(()=> fetchJson(proxyUrl))
       .then(json=>{
         if(json.code !== 200) throw new Error("استجابة غير متوقعة من الخادم");
-        state.timings = json.data.timings;
+        state.timings = normalizeTimings(json.data.timings);
         state.hijri = json.data.date.hijri;
         state.gregorian = json.data.date.gregorian;
         render(city);
@@ -1306,3 +1318,7 @@
 
   loadTimings();
 })();
+
+</script>
+</body>
+</html>
