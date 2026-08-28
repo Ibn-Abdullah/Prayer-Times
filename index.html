@@ -1009,8 +1009,18 @@
 
   async function selectCity(id){
     if(id === USER_LOCATION_ID){
+ codex/add-location-permission-notification-pu5m15
       await activateUserLocation({ showLoading:true, timeout:15000 });
       el.cityList.classList.remove("open");
+
+      const city = await requestUserLocation();
+      el.cityList.classList.remove("open");
+      if(!city) return;
+      state.cityId = USER_LOCATION_ID;
+      saveCityId(USER_LOCATION_ID);
+      updateCitySearchValue(city);
+      loadTimings();
+ main
       return;
     }
     const city = getCityById(id);
@@ -1025,6 +1035,7 @@
     el.citySearch.value = city?.isUserLocation ? USER_LOCATION_LABEL : `${city.name}، ${city.country}`;
   }
 
+ codex/add-location-permission-notification-pu5m15
   function setLocationPromptVisible(visible){
     el.locationPrompt.classList.toggle("show", !!visible);
   }
@@ -1037,6 +1048,12 @@
     if(options.showLoading){
       el.statusLabel.textContent = "في انتظار إذن تحديد الموقع…";
     }
+  function requestUserLocation(){
+    if(!("geolocation" in navigator)){
+      return Promise.resolve(null);
+    }
+    el.statusLabel.textContent = "في انتظار إذن تحديد الموقع…";
+ main
     return new Promise(resolve=>{
       navigator.geolocation.getCurrentPosition(position=>{
         const lat = Number(position.coords.latitude);
@@ -1044,6 +1061,7 @@
         const method = getMethodForCoordinates(lat, lng);
         const city = { id: USER_LOCATION_ID, name: USER_LOCATION_LABEL, country: LOCATION_ICON, lat, lng, method, isUserLocation: true };
         localStorage.setItem(SAVED_LOCATION_KEY, JSON.stringify({ lat, lng, method, updatedAt: Date.now() }));
+ codex/add-location-permission-notification-pu5m15
         setLocationPromptVisible(false);
         resolve(city);
       }, error=>{
@@ -1090,6 +1108,38 @@
 
   el.locationPromptBtn.addEventListener("click", ()=> activateUserLocation({ showLoading:true, timeout:15000 }));
 
+
+        resolve(city);
+      }, error=>{
+        console.warn("Location permission unavailable:", error);
+        if(state.cityId !== USER_LOCATION_ID) setLoading();
+        resolve(null);
+      }, { enableHighAccuracy:true, timeout:15000, maximumAge:300000 });
+    });
+  }
+
+  async function requestLocationOnFirstVisit(){
+    if(getSavedUserLocation()){
+      state.cityId = USER_LOCATION_ID;
+      saveCityId(USER_LOCATION_ID);
+      updateCitySearchValue(getSavedUserLocation());
+      loadTimings();
+      return;
+    }
+    const city = await requestUserLocation();
+    if(!city){
+      state.cityId = getSavedCityId();
+      updateCitySearchValue(getCityById(state.cityId));
+      loadTimings();
+      return;
+    }
+    state.cityId = USER_LOCATION_ID;
+    saveCityId(USER_LOCATION_ID);
+    updateCitySearchValue(city);
+    loadTimings();
+  }
+
+ main
   el.citySearch.addEventListener("focus", ()=>{
     el.citySearch.select();
     renderCityList("");
