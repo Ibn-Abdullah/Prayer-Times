@@ -239,7 +239,8 @@
   }
   .city-item:hover, .city-item.highlighted{ background:var(--accent-soft); }
   .city-item b{ font-weight:500; }
-  .city-item span{ color:var(--text-muted); font-size:.78rem; }
+  .city-item span{ color:var(--text-muted); font-size:.78rem; display:inline-flex; align-items:center; gap:4px; }
+  .city-item.location-option b, .city-item.location-option span{ color:var(--accent); }
   .city-empty{ padding:14px 16px; color:var(--text-muted); font-size:.85rem; }
 
   /* ---- Signature: horizon arc ---- */
@@ -751,9 +752,53 @@
 
   const OBLIGATORY = ["Fajr","Dhuhr","Asr","Maghrib","Isha"];
   const SAVED_CITY_KEY = "prayerTimesSelectedCityId";
+  const SAVED_LOCATION_KEY = "prayerTimesUserLocation";
+  const USER_LOCATION_ID = "user_location";
+  const USER_LOCATION_LABEL = "your location";
+  const LOCATION_ICON = "📍";
+
+  function getSavedUserLocation(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(SAVED_LOCATION_KEY) || "null");
+      if(!saved || !Number.isFinite(saved.lat) || !Number.isFinite(saved.lng)) return null;
+      return {
+        id: USER_LOCATION_ID,
+        name: USER_LOCATION_LABEL,
+        country: LOCATION_ICON,
+        lat: saved.lat,
+        lng: saved.lng,
+        method: saved.method || getMethodForCoordinates(saved.lat, saved.lng),
+        isUserLocation: true
+      };
+    }catch{
+      return null;
+    }
+  }
+
+  function getMethodForCoordinates(lat, lng){
+    const nearest = CITIES.reduce((best, city)=>{
+      const distance = Math.hypot(city.lat - lat, city.lng - lng);
+      return !best || distance < best.distance ? { city, distance } : best;
+    }, null);
+    return nearest?.city.method || 3;
+  }
+
+  function getLocationChoices(){
+    const savedLocation = getSavedUserLocation();
+    return savedLocation ? [savedLocation, ...CITIES] : [
+      { id: USER_LOCATION_ID, name: USER_LOCATION_LABEL, country: LOCATION_ICON, method: 3, isUserLocation: true },
+      ...CITIES
+    ];
+  }
+
+  function getCityById(id){
+    if(id === USER_LOCATION_ID) return getSavedUserLocation();
+    return CITIES.find(c=>c.id === id);
+  }
 
   function getSavedCityId(){
     const savedCityId = localStorage.getItem(SAVED_CITY_KEY);
+    if(savedCityId === USER_LOCATION_ID && getSavedUserLocation()) return USER_LOCATION_ID;
     return CITIES.some(c=>c.id === savedCityId) ? savedCityId : "cairo";
   }
 
@@ -902,8 +947,8 @@
   function renderCityList(filterText){
     const q = (filterText || "").trim();
     const matches = q
-      ? CITIES.filter(c => c.name.includes(q) || c.country.includes(q))
-      : CITIES;
+      ? getLocationChoices().filter(c => c.name.includes(q) || c.country.includes(q) || (c.isUserLocation && USER_LOCATION_LABEL.includes(q.toLowerCase())))
+      : getLocationChoices();
 
     el.cityList.innerHTML = "";
     if(matches.length === 0){
@@ -915,22 +960,78 @@
     }
     matches.forEach(c=>{
       const item = document.createElement("div");
-      item.className = "city-item";
+      item.className = "city-item" + (c.isUserLocation ? " location-option" : "");
       item.setAttribute("role","option");
       item.tabIndex = 0;
-      item.innerHTML = `<b>${c.name}</b><span>${c.country}</span>`;
+      item.innerHTML = `<b>${c.name}</b><span>${c.isUserLocation ? LOCATION_ICON : c.country}</span>`;
       item.addEventListener("click", ()=> selectCity(c.id));
       item.addEventListener("keydown", e=>{ if(e.key==="Enter") selectCity(c.id); });
       el.cityList.appendChild(item);
     });
   }
 
-  function selectCity(id){
-    const city = CITIES.find(c=>c.id === id);
+  async function selectCity(id){
+    if(id === USER_LOCATION_ID){
+      const city = await requestUserLocation();
+      el.cityList.classList.remove("open");
+      if(!city) return;
+      state.cityId = USER_LOCATION_ID;
+      saveCityId(USER_LOCATION_ID);
+      updateCitySearchValue(city);
+      loadTimings();
+      return;
+    }
+    const city = getCityById(id);
     state.cityId = id;
     saveCityId(id);
-    el.citySearch.value = `${city.name}، ${city.country}`;
+    updateCitySearchValue(city);
     el.cityList.classList.remove("open");
+    loadTimings();
+  }
+
+  function updateCitySearchValue(city){
+    el.citySearch.value = city?.isUserLocation ? USER_LOCATION_LABEL : `${city.name}، ${city.country}`;
+  }
+
+  function requestUserLocation(){
+    if(!("geolocation" in navigator)){
+      return Promise.resolve(null);
+    }
+    el.statusLabel.textContent = "في انتظار إذن تحديد الموقع…";
+    return new Promise(resolve=>{
+      navigator.geolocation.getCurrentPosition(position=>{
+        const lat = Number(position.coords.latitude);
+        const lng = Number(position.coords.longitude);
+        const method = getMethodForCoordinates(lat, lng);
+        const city = { id: USER_LOCATION_ID, name: USER_LOCATION_LABEL, country: LOCATION_ICON, lat, lng, method, isUserLocation: true };
+        localStorage.setItem(SAVED_LOCATION_KEY, JSON.stringify({ lat, lng, method, updatedAt: Date.now() }));
+        resolve(city);
+      }, error=>{
+        console.warn("Location permission unavailable:", error);
+        if(state.cityId !== USER_LOCATION_ID) setLoading();
+        resolve(null);
+      }, { enableHighAccuracy:true, timeout:15000, maximumAge:300000 });
+    });
+  }
+
+  async function requestLocationOnFirstVisit(){
+    if(getSavedUserLocation()){
+      state.cityId = USER_LOCATION_ID;
+      saveCityId(USER_LOCATION_ID);
+      updateCitySearchValue(getSavedUserLocation());
+      loadTimings();
+      return;
+    }
+    const city = await requestUserLocation();
+    if(!city){
+      state.cityId = getSavedCityId();
+      updateCitySearchValue(getCityById(state.cityId));
+      loadTimings();
+      return;
+    }
+    state.cityId = USER_LOCATION_ID;
+    saveCityId(USER_LOCATION_ID);
+    updateCitySearchValue(city);
     loadTimings();
   }
 
@@ -950,8 +1051,8 @@
   });
 
   (function initCityBox(){
-    const c = CITIES.find(x=>x.id === state.cityId);
-    el.citySearch.value = `${c.name}، ${c.country}`;
+    const c = getCityById(state.cityId) || CITIES.find(x=>x.id === "cairo");
+    updateCitySearchValue(c);
   })();
 
   // ---------- fetch ----------
@@ -992,7 +1093,7 @@
   }
 
   function loadTimings(){
-    const city = CITIES.find(c=>c.id === state.cityId);
+    const city = getCityById(state.cityId) || CITIES.find(c=>c.id === "cairo");
     if(state._interval) clearInterval(state._interval);
     resetAlert();
     state.lastActiveKey = null;
@@ -1183,7 +1284,9 @@
     });
 
     const methodName = METHOD_NAMES[city.method] || "طريقة قياسية";
-    el.footerNote.innerHTML = `${city.name}، ${city.country} · طريقة الحساب: ${methodName}`;
+    el.footerNote.innerHTML = city.isUserLocation
+      ? `${LOCATION_ICON} ${USER_LOCATION_LABEL} · طريقة الحساب: ${methodName}`
+      : `${city.name}، ${city.country} · طريقة الحساب: ${methodName}`;
 
     persistWidgetData(city);
     buildArc();
@@ -1197,7 +1300,7 @@
     if(!state.mobileExperience || !state.timings) return; // ✅ Mobile only
     const payload = {
       updatedAt: Date.now(),
-      city: { id: city.id, name: city.name, country: city.country, lat: city.lat, lng: city.lng, method: city.method },
+      city: { id: city.id, name: city.name, country: city.country, lat: city.lat, lng: city.lng, method: city.method, isUserLocation: !!city.isUserLocation },
       timings: state.timings
     };
     localStorage.setItem("prayerTimesWidgetData", JSON.stringify(payload));
@@ -1316,7 +1419,7 @@
     state.lastActiveKey = activeKey;
   }
 
-  loadTimings();
+  requestLocationOnFirstVisit();
 })();
 
 </script>
