@@ -91,25 +91,6 @@
   .install-btn:hover{ transform:translateY(-1px); }
   .install-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-  .notify-btn{
-    min-height:44px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    background:var(--surface);
-    color:var(--text);
-    padding:0 13px;
-    font-family:'Tajawal', sans-serif;
-    font-weight:700;
-    font-size:.84rem;
-    cursor:pointer;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-    white-space:nowrap;
-  }
-  .notify-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
-
   .theme-toggle{
     width:44px; height:44px;
     border-radius:50%;
@@ -124,7 +105,7 @@
   }
   .theme-toggle:hover{ transform:scale(1.06); }
   .theme-toggle.muted{ opacity:.4; }
-  .theme-toggle:focus-visible, .notify-btn:focus-visible, .location-prompt button:focus-visible, input:focus-visible, .card:focus-visible, .city-item:focus-visible{
+  .theme-toggle:focus-visible, .location-prompt button:focus-visible, input:focus-visible, .card:focus-visible, .city-item:focus-visible{
     outline:2px solid var(--accent); outline-offset:2px;
   }
 
@@ -152,36 +133,6 @@
     font-size:1.05rem;
     color:var(--accent);
   }
-  .prayer-alarm{
-    position:fixed;
-    inset:0;
-    z-index:100;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:28px;
-    text-align:center;
-    background:linear-gradient(160deg, #0878d8, #0c4fa8 55%, #073062);
-    color:#fff;
-  }
-  .prayer-alarm.show{ display:flex; }
-  .prayer-alarm-card{
-    width:min(100%, 430px);
-    border:1px solid rgba(255,255,255,.25);
-    border-radius:28px;
-    padding:34px 22px;
-    background:rgba(255,255,255,.12);
-    box-shadow:0 24px 70px rgba(0,0,0,.35);
-    backdrop-filter:blur(10px);
-  }
-  .prayer-alarm h2{ font-family:'Amiri', serif; font-size:2.15rem; margin-bottom:12px; }
-  .prayer-alarm .alarm-clock{ font-size:2.6rem; font-weight:900; font-variant-numeric:tabular-nums; margin-bottom:20px; direction:ltr; }
-  .prayer-alarm button{
-    border:0; border-radius:999px; padding:12px 26px;
-    background:#fff; color:#0c4fa8; font-family:'Tajawal', sans-serif;
-    font-weight:800; cursor:pointer;
-  }
-
   .azan-banner button{
     background:var(--accent);
     color:var(--surface);
@@ -374,10 +325,6 @@
     line-height:1.9;
   }
 
-  @media (hover:none) and (pointer:coarse) and (max-width:768px){
-    .notify-btn{ display:flex; }
-  }
-
   @media (max-width:460px){
     .header-actions{ gap:8px; }
     .install-btn{ padding:0 12px; font-size:.8rem; }
@@ -403,7 +350,6 @@
     </div>
     <div class="header-actions">
       <button class="install-btn" id="installBtn" type="button" aria-label="تحميل الموقع على الشاشة الرئيسية">⬇ تحميل</button>
-      <button class="notify-btn" id="notifyBtn" type="button" aria-label="تفعيل تنبيهات الصلاة">🔔 تنبيهات</button>
       <button class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي والنهاري">☾</button>
     </div>
   </header>
@@ -414,14 +360,6 @@
   </div>
 
   <audio id="azanAudio" src="adhan.mp3" preload="none"></audio>
-
-  <div class="prayer-alarm" id="prayerAlarm" role="dialog" aria-modal="true" aria-labelledby="alarmTitle">
-    <div class="prayer-alarm-card">
-      <h2 id="alarmTitle">حان وقت الصلاة</h2>
-      <div class="alarm-clock" id="alarmClock">--:--</div>
-      <button id="alarmCloseBtn" type="button">تم</button>
-    </div>
-  </div>
 
   <div class="location-prompt" id="locationPrompt">
     <div class="location-prompt-text">
@@ -850,10 +788,7 @@
     _interval: null,
     lastActiveKey: null,
     ringing: false,
-    muted: false,
-    notificationTimers: [],
-    swRegistration: null,
-    mobileExperience: false
+    muted: false
   };
 
   const el = {
@@ -875,26 +810,10 @@
     countdownLabel: document.getElementById("countdownLabel"),
     retryBtn: document.getElementById("retryBtn"),
     installBtn: document.getElementById("installBtn"),
-    notifyBtn: document.getElementById("notifyBtn"),
-    prayerAlarm: document.getElementById("prayerAlarm"),
-    alarmTitle: document.getElementById("alarmTitle"),
-    alarmClock: document.getElementById("alarmClock"),
-    alarmCloseBtn: document.getElementById("alarmCloseBtn"),
     arcTrack: document.getElementById("arcTrack"),
     arcPoints: document.getElementById("arcPoints"),
     arcGlyph: document.getElementById("arcGlyph")
   };
-
-  function isMobileExperience(){
-    return window.matchMedia("(hover: none) and (pointer: coarse) and (max-width: 768px)").matches;
-  }
-
-  state.mobileExperience = isMobileExperience();
-  window.addEventListener("resize", ()=>{
-    state.mobileExperience = isMobileExperience();
-    updateNotifyButton();
-    if(!state.mobileExperience) clearPrayerNotificationTimers();
-  });
 
   // ---------- theme ----------
   function applyTheme(){
@@ -929,24 +848,6 @@
     el.azanBanner.classList.remove("show");
   }
 
-  function formatCurrentClock(){
-    return new Intl.DateTimeFormat("ar-EG", { hour:"2-digit", minute:"2-digit", second:"2-digit" }).format(new Date());
-  }
-
-  function showPrayerAlarm(name){
-    if(!state.mobileExperience) return; // ✅ Mobile only
-    el.alarmTitle.textContent = `حان وقت صلاة ${name}`;
-    el.alarmClock.textContent = formatCurrentClock();
-    el.prayerAlarm.classList.add("show");
-  }
-
-  el.alarmCloseBtn.addEventListener("click", ()=> el.prayerAlarm.classList.remove("show"));
-
-  const alarmFromUrl = new URLSearchParams(window.location.search).get("alarm");
-  if(alarmFromUrl && state.mobileExperience){ // ✅ Mobile only
-    window.addEventListener("load", ()=> showPrayerAlarm(alarmFromUrl));
-  }
-
   function resetAlert(){
     state.ringing = false;
     state.muted = false;
@@ -955,17 +856,12 @@
     el.azanAudio.currentTime = 0;
     el.azanStopBtn.textContent = "كتم";
     hideBanner();
-    el.prayerAlarm.classList.remove("show");
   }
 
   function startAdhanAlert(prayerName){
     resetAlert();
     state.ringing = true;
     showBanner(prayerName);
-    if(state.mobileExperience){ // ✅ Mobile only
-      showPrayerAlarm(prayerName);
-      showPrayerNotification(prayerName);
-    }
     el.azanAudio.currentTime = 0;
     el.azanAudio.play().catch(err=>{
       console.error("azan playback failed:", err);
@@ -1009,18 +905,8 @@
 
   async function selectCity(id){
     if(id === USER_LOCATION_ID){
- codex/add-location-permission-notification-pu5m15
       await activateUserLocation({ showLoading:true, timeout:15000 });
       el.cityList.classList.remove("open");
-
-      const city = await requestUserLocation();
-      el.cityList.classList.remove("open");
-      if(!city) return;
-      state.cityId = USER_LOCATION_ID;
-      saveCityId(USER_LOCATION_ID);
-      updateCitySearchValue(city);
-      loadTimings();
- main
       return;
     }
     const city = getCityById(id);
@@ -1035,7 +921,6 @@
     el.citySearch.value = city?.isUserLocation ? USER_LOCATION_LABEL : `${city.name}، ${city.country}`;
   }
 
- codex/add-location-permission-notification-pu5m15
   function setLocationPromptVisible(visible){
     el.locationPrompt.classList.toggle("show", !!visible);
   }
@@ -1048,12 +933,6 @@
     if(options.showLoading){
       el.statusLabel.textContent = "في انتظار إذن تحديد الموقع…";
     }
-  function requestUserLocation(){
-    if(!("geolocation" in navigator)){
-      return Promise.resolve(null);
-    }
-    el.statusLabel.textContent = "في انتظار إذن تحديد الموقع…";
- main
     return new Promise(resolve=>{
       navigator.geolocation.getCurrentPosition(position=>{
         const lat = Number(position.coords.latitude);
@@ -1061,7 +940,6 @@
         const method = getMethodForCoordinates(lat, lng);
         const city = { id: USER_LOCATION_ID, name: USER_LOCATION_LABEL, country: LOCATION_ICON, lat, lng, method, isUserLocation: true };
         localStorage.setItem(SAVED_LOCATION_KEY, JSON.stringify({ lat, lng, method, updatedAt: Date.now() }));
- codex/add-location-permission-notification-pu5m15
         setLocationPromptVisible(false);
         resolve(city);
       }, error=>{
@@ -1108,38 +986,6 @@
 
   el.locationPromptBtn.addEventListener("click", ()=> activateUserLocation({ showLoading:true, timeout:15000 }));
 
-
-        resolve(city);
-      }, error=>{
-        console.warn("Location permission unavailable:", error);
-        if(state.cityId !== USER_LOCATION_ID) setLoading();
-        resolve(null);
-      }, { enableHighAccuracy:true, timeout:15000, maximumAge:300000 });
-    });
-  }
-
-  async function requestLocationOnFirstVisit(){
-    if(getSavedUserLocation()){
-      state.cityId = USER_LOCATION_ID;
-      saveCityId(USER_LOCATION_ID);
-      updateCitySearchValue(getSavedUserLocation());
-      loadTimings();
-      return;
-    }
-    const city = await requestUserLocation();
-    if(!city){
-      state.cityId = getSavedCityId();
-      updateCitySearchValue(getCityById(state.cityId));
-      loadTimings();
-      return;
-    }
-    state.cityId = USER_LOCATION_ID;
-    saveCityId(USER_LOCATION_ID);
-    updateCitySearchValue(city);
-    loadTimings();
-  }
-
- main
   el.citySearch.addEventListener("focus", ()=>{
     el.citySearch.select();
     renderCityList("");
@@ -1230,11 +1076,7 @@
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", ()=>{
-      navigator.serviceWorker.register("service-worker.js").then(reg=>{
-        state.swRegistration = reg;
-        updateNotifyButton();
-        if(state.mobileExperience) schedulePrayerNotifications(); // ✅ Mobile only
-      }).catch(err=>{
+      navigator.serviceWorker.register("service-worker.js").catch(err=>{
         console.warn("Service worker registration failed:", err);
       });
     });
@@ -1243,7 +1085,7 @@
   window.addEventListener("beforeinstallprompt", event=>{
     event.preventDefault();
     deferredInstallPrompt = event;
-    if(state.mobileExperience) el.installBtn.classList.add("show");
+    el.installBtn.classList.add("show");
   });
 
   el.installBtn.addEventListener("click", async ()=>{
@@ -1261,84 +1103,6 @@
     deferredInstallPrompt = null;
     el.installBtn.classList.remove("show");
   });
-
-  // ---------- notifications ----------
-  function updateNotifyButton(){
-    const supported = state.mobileExperience && "Notification" in window; // ✅ Mobile only
-    const granted = supported && Notification.permission === "granted";
-    el.notifyBtn.hidden = !state.mobileExperience; // ✅ Hide on desktop
-    el.notifyBtn.disabled = !supported;
-    el.notifyBtn.classList.toggle("active", granted);
-    el.notifyBtn.textContent = granted ? "🔔 مفعّلة" : "🔔 تنبيهات";
-  }
-
-  async function requestNotifications(){
-    if(!state.mobileExperience){ // ✅ Mobile only
-      alert("التنبيهات متاحة على الموبايل فقط.");
-      return;
-    }
-    if(!("Notification" in window)){
-      alert("المتصفح الحالي لا يدعم إشعارات الويب.");
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    updateNotifyButton();
-    if(permission === "granted"){
-      schedulePrayerNotifications();
-      const nextName = el.nextName.textContent && el.nextName.textContent !== "—" ? el.nextName.textContent : "الصلاة القادمة";
-      showPersistentNextNotification(nextName, el.countdown.textContent);
-    }
-  }
-
-  el.notifyBtn.addEventListener("click", requestNotifications);
-  updateNotifyButton();
-
-  function postToServiceWorker(message){
-    if(state.swRegistration?.active){
-      state.swRegistration.active.postMessage(message);
-    }else if(navigator.serviceWorker?.controller){
-      navigator.serviceWorker.controller.postMessage(message);
-    }
-  }
-
-  function showPersistentNextNotification(name, remaining){
-    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
-    postToServiceWorker({
-      type:"SHOW_NEXT_PRAYER",
-      title:`الصلاة القادمة: ${name}`,
-      body: remaining ? `متبقٍّ ${remaining}` : "اضغط لفتح مواقيت الصلاة"
-    });
-  }
-
-  function showPrayerNotification(name){
-    if(!state.mobileExperience || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
-    postToServiceWorker({
-      type:"SHOW_PRAYER_NOW",
-      title:`حان وقت صلاة ${name}`,
-      body:`الساعة الآن ${formatCurrentClock()}`,
-      prayerName:name
-    });
-  }
-
-  function clearPrayerNotificationTimers(){
-    state.notificationTimers.forEach(id=>clearTimeout(id));
-    state.notificationTimers = [];
-  }
-
-  function schedulePrayerNotifications(){
-    clearPrayerNotificationTimers();
-    if(!state.mobileExperience || !state.timings || !("Notification" in window) || Notification.permission !== "granted") return; // ✅ Mobile only
-    const now = new Date();
-    OBLIGATORY.forEach(key=>{
-      const [hours, minutes] = state.timings[key].split(":").map(Number);
-      const at = new Date(now);
-      at.setHours(hours, minutes, 0, 0);
-      if(at <= now) return;
-      const prayer = PRAYERS.find(p=>p.key === key);
-      const timerId = setTimeout(()=> startAdhanAlert(prayer ? prayer.name : key), at - now);
-      state.notificationTimers.push(timerId);
-    });
-  }
 
   // ---------- helpers ----------
   function toMinutes(hhmm){
@@ -1395,14 +1159,13 @@
 
     persistWidgetData(city);
     buildArc();
-    if(state.mobileExperience) schedulePrayerNotifications(); // ✅ Mobile only
     tick();
     if(state._interval) clearInterval(state._interval);
     state._interval = setInterval(tick, 1000);
   }
 
   function persistWidgetData(city){
-    if(!state.mobileExperience || !state.timings) return; // ✅ Mobile only
+    if(!state.timings) return;
     const payload = {
       updatedAt: Date.now(),
       city: { id: city.id, name: city.name, country: city.country, lat: city.lat, lng: city.lng, method: city.method, isUserLocation: !!city.isUserLocation },
@@ -1497,11 +1260,6 @@
     const nextObj = PRAYERS.find(p=>p.key === next.key);
     el.nextName.textContent = nextObj ? nextObj.name : "الفجر";
     el.countdown.textContent = fmtCountdown(Math.max(diffSeconds,0));
-    
-    if(state.mobileExperience && "Notification" in window && Notification.permission === "granted"){ // ✅ Mobile only
-      showPersistentNextNotification(nextObj ? nextObj.name : "الفجر", el.countdown.textContent);
-    }
-
     document.querySelectorAll(".card").forEach(c=>{
       c.classList.toggle("next", c.dataset.key === next.key);
     });
@@ -1517,7 +1275,7 @@
     }
     if(!activeKey) activeKey = "Isha";
 
-    if(state.mobileExperience && state.lastActiveKey !== null && state.lastActiveKey !== activeKey){ // ✅ Mobile only
+    if(state.lastActiveKey !== null && state.lastActiveKey !== activeKey){
       const startedPrayer = PRAYERS.find(p=>p.key === activeKey);
       startAdhanAlert(startedPrayer ? startedPrayer.name : activeKey);
     }

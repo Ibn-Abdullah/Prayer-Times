@@ -1,7 +1,7 @@
 {
   "name": "مواقيت الصلاة",
   "short_name": "الصلاة",
-  "description": "موقع بسيط لمعرفة مواقيت الصلاة والتنبيه عند الأذان.",
+  "description": "موقع بسيط لمعرفة مواقيت الصلاة.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
@@ -10,63 +10,13 @@
   "orientation": "portrait-primary",
   "background_color": "#0F1B2D",
   "theme_color": "#0F1B2D",
-  "categories": [
-    "lifestyle",
-    "utilities"
-  ],
+  "categories": ["lifestyle", "utilities"],
   "icons": [
     {
       "src": "ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
       "sizes": "500x500",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
- codex/update-mobile-app-for-prayer-notifications-q946q3
-
-  "display_override": [
-    "window-controls-overlay",
-    "standalone"
-  ],
- main
-  "shortcuts": [
-    {
-      "name": "مواقيت الصلاة",
-      "short_name": "المواقيت",
-      "description": "فتح مواقيت الصلاة والتنبيهات",
-      "url": "./",
-      "icons": [
-        {
-          "src": "ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
-          "sizes": "500x500",
-          "type": "image/png",
-          "purpose": "any maskable"
-        }
-      ]
-    }
-  ],
-  "widgets": [
-    {
-      "name": "ودجت مواقيت الصلاة",
-      "short_name": "ودجت الصلاة",
- codex/update-mobile-app-for-prayer-notifications-q946q3
-      "description": "ودجت موبايل يعرض الصلاة القادمة والعد التنازلي ومواقيت الصلوات الخمس وموقع الحساب.",
-
-      "description": "يعرض الصلاة القادمة ومواقيت اليوم في ودجت الشاشة الرئيسية.",
- main
-      "tag": "prayer-times-widget",
-      "template": "./widget.html",
-      "ms_ac_template": "./widget.html",
-      "data": "./widget.html",
-      "type": "application/json",
-      "screenshots": [
-        {
-          "src": "ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
-          "sizes": "500x500",
-          "type": "image/png",
-          "label": "ودجت مواقيت الصلاة"
-        }
-      ]
     }
   ]
 }
