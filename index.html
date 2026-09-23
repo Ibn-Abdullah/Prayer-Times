@@ -91,6 +91,26 @@
   .install-btn:hover{ transform:translateY(-1px); }
   .install-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
+  .notify-btn{
+    min-height:44px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    padding:0 13px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:.84rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .notify-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .notify-btn:disabled{ cursor:not-allowed; opacity:.55; }
+
   .theme-toggle{
     width:44px; height:44px;
     border-radius:50%;
@@ -105,7 +125,7 @@
   }
   .theme-toggle:hover{ transform:scale(1.06); }
   .theme-toggle.muted{ opacity:.4; }
-  .theme-toggle:focus-visible, .location-prompt button:focus-visible, input:focus-visible, .card:focus-visible, .city-item:focus-visible{
+  .theme-toggle:focus-visible, .notify-btn:focus-visible, .location-prompt button:focus-visible, input:focus-visible, .card:focus-visible, .city-item:focus-visible{
     outline:2px solid var(--accent); outline-offset:2px;
   }
 
@@ -350,6 +370,7 @@
     </div>
     <div class="header-actions">
       <button class="install-btn" id="installBtn" type="button" aria-label="تحميل الموقع على الشاشة الرئيسية">⬇ تحميل</button>
+      <button class="notify-btn" id="notifyBtn" type="button" aria-label="تفعيل إشعارات الأدعية كل ساعة">🔔 تفعيل الأدعية</button>
       <button class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي والنهاري">☾</button>
     </div>
   </header>
@@ -729,6 +750,16 @@
   const USER_LOCATION_ID = "user_location";
   const USER_LOCATION_LABEL = "your location";
   const LOCATION_ICON = "📍";
+  const HOURLY_DUAS = [
+    "اللهم أعنّي على ذكرك وشكرك وحسن عبادتك.",
+    "رب اشرح لي صدري ويسر لي أمري.",
+    "اللهم اغفر لي ولوالدي وللمؤمنين يوم يقوم الحساب.",
+    "اللهم إني أسألك الهدى والتقى والعفاف والغنى.",
+    "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار.",
+    "اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني.",
+    "يا مقلب القلوب ثبت قلبي على دينك.",
+    "اللهم إني أعوذ بك من الهم والحزن والعجز والكسل."
+  ];
 
   function getSavedUserLocation(){
     try{
@@ -788,7 +819,10 @@
     _interval: null,
     lastActiveKey: null,
     ringing: false,
-    muted: false
+    muted: false,
+    swRegistration: null,
+    hourlyDuaTimer: null,
+    lastHourlyDuaHour: null
   };
 
   const el = {
@@ -810,6 +844,7 @@
     countdownLabel: document.getElementById("countdownLabel"),
     retryBtn: document.getElementById("retryBtn"),
     installBtn: document.getElementById("installBtn"),
+    notifyBtn: document.getElementById("notifyBtn"),
     arcTrack: document.getElementById("arcTrack"),
     arcPoints: document.getElementById("arcPoints"),
     arcGlyph: document.getElementById("arcGlyph")
@@ -875,6 +910,70 @@
     el.azanStopBtn.textContent = state.muted ? "إلغاء الكتم" : "كتم";
   }
   el.azanStopBtn.addEventListener("click", toggleMute);
+
+  // ---------- notifications ----------
+  function updateNotifyButton(){
+    const supported = "Notification" in window;
+    const granted = supported && Notification.permission === "granted";
+    el.notifyBtn.disabled = !supported || Notification.permission === "denied";
+    el.notifyBtn.classList.toggle("active", granted);
+    el.notifyBtn.textContent = granted ? "🔔 الأدعية مفعّلة" : "🔔 تفعيل الأدعية";
+  }
+
+  function showNotification(title, body, tag){
+    if(!("Notification" in window) || Notification.permission !== "granted") return;
+    const options = {
+      body,
+      icon: "./ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
+      badge: "./ChatGPT_Image_Aug_1__2026__10_13_05_PM-removebg-preview.png",
+      tag,
+      data: { url: "./" }
+    };
+    if(state.swRegistration) {
+      state.swRegistration.showNotification(title, options);
+    } else {
+      new Notification(title, options);
+    }
+  }
+
+  function hourlyDuaKey(date = new Date()){
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+  }
+
+  function sendHourlyDua(){
+    const key = hourlyDuaKey();
+    if(state.lastHourlyDuaHour === key) return;
+    state.lastHourlyDuaHour = key;
+    const dua = HOURLY_DUAS[Math.floor(Math.random() * HOURLY_DUAS.length)];
+    showNotification("دعاء الساعة", dua, `hourly-dua-${key}`);
+  }
+
+  function scheduleHourlyDuas(){
+    if(state.hourlyDuaTimer) clearTimeout(state.hourlyDuaTimer);
+    if(!("Notification" in window) || Notification.permission !== "granted") return;
+    const now = new Date();
+    const delay = (60 - now.getMinutes()) * 60000 - now.getSeconds() * 1000 - now.getMilliseconds();
+    state.hourlyDuaTimer = setTimeout(function run(){
+      sendHourlyDua();
+      state.hourlyDuaTimer = setTimeout(run, 60 * 60 * 1000);
+    }, Math.max(delay, 1000));
+  }
+
+  async function requestNotifications(){
+    if(!("Notification" in window)){
+      alert("المتصفح الحالي لا يدعم إشعارات الويب.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    updateNotifyButton();
+    if(permission === "granted"){
+      scheduleHourlyDuas();
+      showNotification("تم تفعيل الأدعية", "سيصلك دعاء عشوائي في بداية كل ساعة ما دام التطبيق مفتوحًا.", "hourly-dua-enabled");
+    }
+  }
+
+  el.notifyBtn.addEventListener("click", requestNotifications);
+  updateNotifyButton();
 
   // ---------- city search ----------
   function renderCityList(filterText){
@@ -1076,7 +1175,10 @@
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", ()=>{
-      navigator.serviceWorker.register("service-worker.js").catch(err=>{
+      navigator.serviceWorker.register("service-worker.js").then(reg=>{
+        state.swRegistration = reg;
+        scheduleHourlyDuas();
+      }).catch(err=>{
         console.warn("Service worker registration failed:", err);
       });
     });
